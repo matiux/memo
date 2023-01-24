@@ -1,10 +1,13 @@
 package aggregate
 
 import (
+	"fmt"
 	"time"
 )
 
-type Event interface {
+var ErrEventNotRegistered = fmt.Errorf("event not registered")
+
+type DomainEvent interface {
 	GetOccurredAt() time.Time
 }
 
@@ -20,8 +23,4 @@ type MemoCreated struct {
 	id   UUIDv4
 	body string
 	BasicEvent
-}
-
-func NewMemoCreated(id UUIDv4, body string, occurredAt time.Time) MemoCreated {
-	return MemoCreated{id, body, BasicEvent{occurredAt}}
 }

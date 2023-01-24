@@ -6,32 +6,29 @@ import (
 	"time"
 )
 
-func Test_it_should_be_created(t *testing.T) {
+func Test_it_should_be_create_new_memo(t *testing.T) {
 
 	memoId := NewUUIDv4()
 	body := "Vegetables are good"
 	creationDate := time.Now()
 
 	memo := NewMemo(memoId, body, creationDate)
-	//fmt.Printf("%v\n", memoId)
-	//fmt.Printf("%v\n", memo.id)
+
 	assert.True(t, memo.id.Equals(memoId))
 	assert.Equal(t, body, memo.body)
 	assert.Equal(t, creationDate, memo.creationDate)
+
 	assert.Len(t, memo.UncommittedEvents, 1)
 
-	//id := "message_id"
-	//playhead := 1
-	//metadata := Metadata{MetadataValuesT{"foo": "bar"}}
-	//eventType := "OrderCreated"
-	//payload := []byte(`{"some":"json"}`)
-	//
-	//domainMessage := RecordMessageNow(id, playhead, metadata, eventType, payload)
-	//
-	//assert.Equal(t, id, domainMessage.Id)
-	//assert.Equal(t, playhead, domainMessage.Playhead)
-	//assert.Equal(t, metadata, domainMessage.Metadata)
-	//assert.Equal(t, eventType, domainMessage.EventType)
-	//assert.Equal(t, payload, domainMessage.Payload)
+	domainMessage := memo.UncommittedEvents[0]
+	memoCreated := domainMessage.Event.(MemoCreated)
+
+	assert.IsType(t, MemoCreated{}, memoCreated)
+	assert.Equal(t, 1, domainMessage.Playhead)
+	assert.Equal(t, 1, memo.Playhead)
+
+	assert.Equal(t, creationDate, memoCreated.GetOccurredAt())
+	assert.True(t, memoCreated.id.Equals(memoId))
+	assert.Equal(t, body, memoCreated.body)
 
 }

@@ -2,26 +2,52 @@ package aggregate
 
 import (
 	"reflect"
+	"sync"
+	"time"
 )
 
+// DomainMessage represents an important change in the domain.
+type DomainMessage struct {
+	Playhead    int
+	EventType   string
+	Event       DomainEvent
+	AggregateId EntityId
+	RecordedOn  time.Time
+}
+
+// Root represents an AggregateRoot
 type Root interface {
-	getAggregateRootId() string
-	Apply(event Event) (err error)
+	getAggregateRootId() EntityId
+	Apply(event DomainEvent) (err error)
 }
 
+// EventSourcedAggregateRoot is the basic struct for an AggregateRoot
 type EventSourcedAggregateRoot struct {
-	UncommittedEvents []Event
-	Playhead          int64
+	UncommittedEvents []DomainMessage
+	Playhead          int
+	mutex             sync.Mutex
 }
 
-func (e *EventSourcedAggregateRoot) apply(event Event, aggregate Root) {
-	//tv := reflect.TypeOf(event)
-	//fmt.Printf("\n-----\n%v\n-----\n", tv.Name())
+func (e *EventSourcedAggregateRoot) Record(event DomainEvent, aggregate Root) error {
 
-	inputs := make([]reflect.Value, 1)
-	inputs[0] = reflect.ValueOf(event)
+	e.mutex.Lock()
+	defer e.mutex.Unlock()
 
-	reflect.ValueOf(aggregate).MethodByName("ApplyMemoCreated").Call(inputs)
+	if err := aggregate.Apply(event); err != nil {
+		return err
+	}
 
-	e.UncommittedEvents = append(e.UncommittedEvents, event)
+	e.Playhead++
+	e.UncommittedEvents = append(
+		e.UncommittedEvents,
+		DomainMessage{
+			Playhead:    e.Playhead,
+			EventType:   reflect.ValueOf(event).Kind().String(),
+			Event:       event,
+			AggregateId: aggregate.getAggregateRootId(),
+			RecordedOn:  event.GetOccurredAt(),
+		},
+	)
+
+	return nil
 }
