@@ -6,9 +6,12 @@ import (
 	"time"
 )
 
+type Playhead int
+type DomainEventStream []DomainMessage
+
 // DomainMessage represents an important change in the domain.
 type DomainMessage struct {
-	Playhead    int
+	Playhead
 	EventType   string
 	Event       DomainEvent
 	AggregateId EntityId
@@ -24,8 +27,8 @@ type Root interface {
 // EventSourcedAggregateRoot is the basic struct for an AggregateRoot
 type EventSourcedAggregateRoot struct {
 	UncommittedEvents []DomainMessage
-	Playhead          int
-	mutex             sync.Mutex
+	Playhead
+	mutex sync.Mutex
 }
 
 func (e *EventSourcedAggregateRoot) Record(event DomainEvent, aggregate Root) error {

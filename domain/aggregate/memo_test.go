@@ -24,8 +24,8 @@ func Test_it_should_be_create_new_memo(t *testing.T) {
 	memoCreated := domainMessage.Event.(MemoCreated)
 
 	assert.IsType(t, MemoCreated{}, memoCreated)
-	assert.Equal(t, 1, domainMessage.Playhead)
-	assert.Equal(t, 1, memo.Playhead)
+	assert.Equal(t, Playhead(1), domainMessage.Playhead)
+	assert.Equal(t, Playhead(1), memo.Playhead)
 
 	assert.Equal(t, creationDate, memoCreated.GetOccurredAt())
 	assert.True(t, memoCreated.id.Equals(memoId))
