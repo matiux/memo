@@ -1,7 +1,6 @@
 package aggregate
 
 import (
-	"reflect"
 	"sync"
 	"time"
 )
@@ -44,8 +43,9 @@ func (e *EventSourcedAggregateRoot) Record(event DomainEvent, aggregate Root) er
 	e.UncommittedEvents = append(
 		e.UncommittedEvents,
 		DomainMessage{
-			Playhead:    e.Playhead,
-			EventType:   reflect.ValueOf(event).Kind().String(),
+			Playhead: e.Playhead,
+			//EventType:   reflect.ValueOf(event).Kind().String(),
+			EventType:   event.Kind(),
 			Event:       event,
 			AggregateId: aggregate.getAggregateRootId(),
 			RecordedOn:  event.GetOccurredAt(),

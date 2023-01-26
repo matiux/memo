@@ -9,6 +9,7 @@ var ErrEventNotRegistered = fmt.Errorf("event not registered")
 
 type DomainEvent interface {
 	GetOccurredAt() time.Time
+	Kind() string
 }
 
 type BasicEvent struct {
@@ -23,4 +24,18 @@ type MemoCreated struct {
 	id   UUIDv4
 	body string
 	BasicEvent
+}
+
+func (e MemoCreated) Kind() string {
+	return "MemoCreated"
+}
+
+type MemoBodyUpdated struct {
+	id   UUIDv4
+	body string
+	BasicEvent
+}
+
+func (e MemoBodyUpdated) Kind() string {
+	return "MemoBodyUpdated"
 }
