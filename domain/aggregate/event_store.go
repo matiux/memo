@@ -3,6 +3,7 @@ package aggregate
 import "fmt"
 
 var EventStreamNotFound = fmt.Errorf("event stream not found")
+var DuplicatePlayhead = fmt.Errorf("duplicate playhead not allowed")
 
 type EventStore interface {
 	Append(id EntityId, eventStream DomainEventStream)
@@ -24,8 +25,19 @@ func (e *InMemoryEventStore) Append(id EntityId, eventStream DomainEventStream) 
 		e.stream[stringId] = make(map[Playhead]DomainMessage)
 	}
 
+	e.assertStream(e.stream[stringId], eventStream)
+
 	for _, domainMessage := range eventStream {
 		e.stream[stringId][domainMessage.Playhead] = domainMessage
+	}
+}
+
+func (e *InMemoryEventStore) assertStream(events map[Playhead]DomainMessage, eventsToAppend DomainEventStream) {
+
+	for _, event := range eventsToAppend {
+		if _, exists := events[event.Playhead]; exists {
+			panic(DuplicatePlayhead)
+		}
 	}
 }
 
