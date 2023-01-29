@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Test_it_should_be_true_when_two_id_equals(t *testing.T) {
+func TestUUID_it_should_be_true_when_two_id_equals(t *testing.T) {
 
 	stringUUID := "f9bee14a-c795-4fc9-8e45-e0fa1759f347"
 

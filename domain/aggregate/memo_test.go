@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func Test_it_should_be_create_new_memo(t *testing.T) {
+func TestMemo_it_should_be_create_new_memo(t *testing.T) {
 
 	memoId := NewUUIDv4()
 	body := "Vegetables are good"
@@ -32,7 +32,7 @@ func Test_it_should_be_create_new_memo(t *testing.T) {
 	assert.Equal(t, body, memoCreated.body)
 }
 
-func Test_it_should_be_update_memo(t *testing.T) {
+func TestMemo_it_should_be_update_memo(t *testing.T) {
 
 	memoId := NewUUIDv4()
 	body := "Vegetables are good"
