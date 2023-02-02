@@ -35,7 +35,7 @@ func (e *EventSourcedAggregateRoot) Record(event DomainEvent, aggregate Root) er
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
 
-	if err := aggregate.Apply(event); err != nil {
+	if err := e.handleRecursively(event, aggregate); err != nil {
 		return err
 	}
 
@@ -53,4 +53,46 @@ func (e *EventSourcedAggregateRoot) Record(event DomainEvent, aggregate Root) er
 	)
 
 	return nil
+}
+
+func (e *EventSourcedAggregateRoot) InitializeState(stream DomainEventStream, aggregate Root) error {
+
+	e.mutex.Lock()
+	defer e.mutex.Unlock()
+
+	for _, message := range stream {
+		e.Playhead++
+		if err := e.handleRecursively(message.Event, aggregate); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (e *EventSourcedAggregateRoot) handleRecursively(event DomainEvent, aggregate Root) error {
+
+	if err := e.handle(event, aggregate); err != nil {
+		return err
+	}
+
+	for _, entity := range e.getChildEntities() {
+		entity.registerAggregateRoot(aggregate)
+		entity.handleRecursively(event)
+	}
+
+	return nil
+}
+
+func (e *EventSourcedAggregateRoot) handle(event DomainEvent, aggregate Root) error {
+	if err := aggregate.Apply(event); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (e *EventSourcedAggregateRoot) getChildEntities() []EventSourcedEntity {
+
+	return []EventSourcedEntity{}
 }

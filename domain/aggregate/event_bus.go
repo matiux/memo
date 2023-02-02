@@ -1,14 +1,13 @@
-package eventstore
+package aggregate
 
 import (
 	"fmt"
-	"github.com/matiux/memo/domain/aggregate"
 	"reflect"
 )
 
 type EventListenerError struct {
 	EventListener string
-	aggregate.DomainMessage
+	DomainMessage
 	OriginalError error
 }
 
@@ -22,17 +21,17 @@ func (e EventListenerError) Error() string {
 }
 
 type EventListener interface {
-	handle(message aggregate.DomainMessage) error
+	handle(message DomainMessage) error
 }
 
 type EventBus interface {
 	subscribe(eventListener EventListener)
-	publish(domainMessages aggregate.DomainEventStream) error
+	publish(domainMessages DomainEventStream) error
 }
 
 type SimpleEventBus struct {
 	eventListeners []EventListener
-	queue          []aggregate.DomainMessage
+	queue          []DomainMessage
 	isPublishing   bool
 }
 
@@ -40,7 +39,7 @@ func (eb *SimpleEventBus) subscribe(eventListener EventListener) {
 	eb.eventListeners = append(eb.eventListeners, eventListener)
 }
 
-func (eb *SimpleEventBus) publish(domainMessages aggregate.DomainEventStream) error {
+func (eb *SimpleEventBus) publish(domainMessages DomainEventStream) error {
 	for _, domainMessage := range domainMessages {
 		eb.queue = append(eb.queue, domainMessage)
 	}

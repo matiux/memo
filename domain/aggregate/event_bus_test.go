@@ -1,8 +1,7 @@
-package eventstore
+package aggregate
 
 import (
 	"fmt"
-	"github.com/matiux/memo/domain/aggregate"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
@@ -12,9 +11,9 @@ import (
 var eventBus EventBus
 
 type EventOccurred struct {
-	id   aggregate.UUIDv4
+	id   UUIDv4
 	body string
-	aggregate.BasicEvent
+	BasicEvent
 }
 
 func (e EventOccurred) Kind() string {
@@ -29,18 +28,18 @@ type EventListenerMock struct {
 	mock.Mock
 }
 
-func (m *EventListenerMock) handle(message aggregate.DomainMessage) error {
+func (m *EventListenerMock) handle(message DomainMessage) error {
 	args := m.Called(message)
 
 	return args.Error(0)
 }
 
-func createTestDomainMessage(body string) aggregate.DomainMessage {
+func createTestDomainMessage(body string) DomainMessage {
 
-	event := EventOccurred{aggregate.NewUUIDv4(), body, aggregate.BasicEvent{}}
+	event := EventOccurred{NewUUIDv4(), body, BasicEvent{}}
 
-	return aggregate.DomainMessage{
-		Playhead:    aggregate.Playhead(1),
+	return DomainMessage{
+		Playhead:    Playhead(1),
 		EventType:   event.Kind(),
 		Event:       event,
 		AggregateId: aggregateId,
@@ -57,7 +56,7 @@ func TestEventBus_it_subscribes_an_event_listener(t *testing.T) {
 	eventListener.On("handle", domainMessage).Once().Return(nil)
 
 	eventBus.subscribe(eventListener)
-	eventBus.publish(aggregate.DomainEventStream{domainMessage})
+	eventBus.publish(DomainEventStream{domainMessage})
 
 	eventListener.AssertExpectations(t)
 }
@@ -69,7 +68,7 @@ func TestEventBus_it_publishes_events_to_subscribed_event_listeners(t *testing.T
 	domainMessage1 := createTestDomainMessage("The event body 1")
 	domainMessage2 := createTestDomainMessage("The event body 2")
 
-	domainEventStream := aggregate.DomainEventStream{domainMessage1, domainMessage2}
+	domainEventStream := DomainEventStream{domainMessage1, domainMessage2}
 
 	eventListener1 := &EventListenerMock{}
 	eventListener1.On("handle", domainMessage1).Once().Return(nil)
@@ -89,11 +88,11 @@ func TestEventBus_it_publishes_events_to_subscribed_event_listeners(t *testing.T
 
 type SimpleEventBusTestListener struct {
 	EventBus
-	publishableStream aggregate.DomainEventStream
+	publishableStream DomainEventStream
 	handled           bool
 }
 
-func (eb *SimpleEventBusTestListener) handle(message aggregate.DomainMessage) error {
+func (eb *SimpleEventBusTestListener) handle(message DomainMessage) error {
 
 	if !eb.handled {
 		eb.EventBus.publish(eb.publishableStream)
@@ -110,11 +109,11 @@ func TestEventBus_it_does_not_dispatch_new_events_before_all_listeners_have_run(
 	domainMessage1 := createTestDomainMessage("The event body 1")
 	domainMessage2 := createTestDomainMessage("The event body 2")
 
-	domainEventStream := aggregate.DomainEventStream{domainMessage1}
+	domainEventStream := DomainEventStream{domainMessage1}
 
 	eventListener1 := SimpleEventBusTestListener{
 		eventBus,
-		aggregate.DomainEventStream{domainMessage2},
+		DomainEventStream{domainMessage2},
 		false,
 	}
 
@@ -136,8 +135,8 @@ func TestEventBus_it_should_still_publish_events_after_exception(t *testing.T) {
 	domainMessage1 := createTestDomainMessage("The event body 1")
 	domainMessage2 := createTestDomainMessage("The event body 2")
 
-	domainEventStream1 := aggregate.DomainEventStream{domainMessage1}
-	domainEventStream2 := aggregate.DomainEventStream{domainMessage2}
+	domainEventStream1 := DomainEventStream{domainMessage1}
+	domainEventStream2 := DomainEventStream{domainMessage2}
 
 	eventListener := &EventListenerMock{}
 	eventListener.On("handle", domainMessage1).Once().Return(fmt.Errorf("an error"))

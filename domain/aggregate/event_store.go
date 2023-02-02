@@ -1,31 +1,30 @@
-package eventstore
+package aggregate
 
 import (
 	"fmt"
-	"github.com/matiux/memo/domain/aggregate"
 )
 
 var EventStreamNotFound = fmt.Errorf("event stream not found")
 var DuplicatePlayhead = fmt.Errorf("duplicate playhead not allowed")
 
 type EventStore interface {
-	Append(id aggregate.EntityId, eventStream aggregate.DomainEventStream)
+	Append(id EntityId, eventStream DomainEventStream)
 
-	Load(id aggregate.EntityId) (aggregate.DomainEventStream, error)
+	Load(id EntityId) (DomainEventStream, error)
 
 	//LoadFromPlayhead(id EntityId, playhead Playhead) DomainEventStream
 }
 
 type InMemoryEventStore struct {
-	stream map[string]map[aggregate.Playhead]aggregate.DomainMessage
+	stream map[string]map[Playhead]DomainMessage
 }
 
-func (e *InMemoryEventStore) Append(id aggregate.EntityId, eventStream aggregate.DomainEventStream) {
+func (e *InMemoryEventStore) Append(id EntityId, eventStream DomainEventStream) {
 
-	stringId := id.(aggregate.UUIDv4).Val
+	stringId := id.(UUIDv4).Val
 
 	if _, exists := e.stream[stringId]; !exists {
-		e.stream[stringId] = make(map[aggregate.Playhead]aggregate.DomainMessage)
+		e.stream[stringId] = make(map[Playhead]DomainMessage)
 	}
 
 	e.assertStream(e.stream[stringId], eventStream)
@@ -35,7 +34,7 @@ func (e *InMemoryEventStore) Append(id aggregate.EntityId, eventStream aggregate
 	}
 }
 
-func (e *InMemoryEventStore) assertStream(events map[aggregate.Playhead]aggregate.DomainMessage, eventsToAppend aggregate.DomainEventStream) {
+func (e *InMemoryEventStore) assertStream(events map[Playhead]DomainMessage, eventsToAppend DomainEventStream) {
 
 	for _, event := range eventsToAppend {
 		if _, exists := events[event.Playhead]; exists {
@@ -44,15 +43,15 @@ func (e *InMemoryEventStore) assertStream(events map[aggregate.Playhead]aggregat
 	}
 }
 
-func (e *InMemoryEventStore) Load(id aggregate.EntityId) (aggregate.DomainEventStream, error) {
+func (e *InMemoryEventStore) Load(id EntityId) (DomainEventStream, error) {
 
-	stringId := id.(aggregate.UUIDv4).Val
+	stringId := id.(UUIDv4).Val
 
 	if _, exists := e.stream[stringId]; !exists {
 		return nil, EventStreamNotFound
 	}
 
-	domainEventStream := aggregate.DomainEventStream{}
+	domainEventStream := DomainEventStream{}
 
 	for _, domainMessage := range e.stream[stringId] {
 		domainEventStream = append(domainEventStream, domainMessage)
