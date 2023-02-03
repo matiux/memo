@@ -20,7 +20,7 @@ func setupTestEventStore() {
 	memoCreatedDomainMessage = DomainMessage{
 		Playhead:    Playhead(1),
 		EventType:   "MemoCreated",
-		Event:       NewMemoCreated(aggregateId, body, creationDate),
+		Payload:     NewMemoCreated(aggregateId, body, creationDate),
 		AggregateId: aggregateId,
 		RecordedOn:  time.Now(),
 	}
@@ -28,7 +28,7 @@ func setupTestEventStore() {
 	memoBodyUpdatedDomainMessage = DomainMessage{
 		Playhead:    Playhead(2),
 		EventType:   "MemoBodyUpdated",
-		Event:       NewMemoBodyUpdated(aggregateId, "Vegetables and fruits are good", time.Now()),
+		Payload:     NewMemoBodyUpdated(aggregateId, "Vegetables and fruits are good", time.Now()),
 		AggregateId: aggregateId,
 		RecordedOn:  time.Now(),
 	}
@@ -39,9 +39,7 @@ func TestEventStore_Append(t *testing.T) {
 
 	setupTestEventStore()
 
-	eventStore := &InMemoryEventStore{
-		stream: make(map[string]map[Playhead]DomainMessage),
-	}
+	eventStore := NewInMemoryEventStore()
 
 	eventStream := DomainEventStream{
 		memoCreatedDomainMessage,

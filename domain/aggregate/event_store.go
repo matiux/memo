@@ -9,9 +9,7 @@ var DuplicatePlayhead = fmt.Errorf("duplicate playhead not allowed")
 
 type EventStore interface {
 	Append(id EntityId, eventStream DomainEventStream)
-
 	Load(id EntityId) (DomainEventStream, error)
-
 	//LoadFromPlayhead(id EntityId, playhead Playhead) DomainEventStream
 }
 
@@ -58,4 +56,52 @@ func (e *InMemoryEventStore) Load(id EntityId) (DomainEventStream, error) {
 	}
 
 	return domainEventStream, nil
+}
+
+func NewInMemoryEventStore() *InMemoryEventStore {
+	return &InMemoryEventStore{
+		stream: make(map[string]map[Playhead]DomainMessage),
+	}
+}
+
+type TraceableEventStore struct {
+	EventStore
+	tracing  bool
+	recorded DomainEventStream
+}
+
+func (e *TraceableEventStore) Append(id EntityId, eventStream DomainEventStream) {
+	e.EventStore.Append(id, eventStream)
+
+	if !e.tracing {
+		return
+	}
+
+	for _, event := range eventStream {
+		e.recorded = append(e.recorded, event)
+	}
+}
+
+func (e *TraceableEventStore) GetEvents() (events []DomainEvent) {
+
+	for _, event := range e.recorded {
+		events = append(events, event.Payload)
+	}
+
+	return
+}
+
+func (e *TraceableEventStore) Trace() {
+	e.tracing = true
+}
+
+func (e *TraceableEventStore) ClearEvents() {
+	e.recorded = DomainEventStream{}
+}
+
+func NewTraceableEventStore(eventStore EventStore) *TraceableEventStore {
+	return &TraceableEventStore{
+		EventStore: eventStore,
+		tracing:    false,
+	}
 }

@@ -21,7 +21,7 @@ func TestMemo_it_should_be_create_new_memo(t *testing.T) {
 	assert.Len(t, memo.UncommittedEvents, 1)
 
 	domainMessage := memo.UncommittedEvents[0]
-	memoCreated := domainMessage.Event.(MemoCreated)
+	memoCreated := domainMessage.Payload.(MemoCreated)
 
 	assert.IsType(t, MemoCreated{}, memoCreated)
 	assert.Equal(t, Playhead(1), domainMessage.Playhead)
@@ -50,8 +50,8 @@ func TestMemo_it_should_be_update_memo(t *testing.T) {
 
 	assert.Len(t, memo.UncommittedEvents, 2)
 
-	memoCreated := memo.UncommittedEvents[0].Event.(MemoCreated)
-	memoBodyUpdated := memo.UncommittedEvents[1].Event.(MemoBodyUpdated)
+	memoCreated := memo.UncommittedEvents[0].Payload.(MemoCreated)
+	memoBodyUpdated := memo.UncommittedEvents[1].Payload.(MemoBodyUpdated)
 
 	assert.IsType(t, MemoCreated{}, memoCreated)
 	assert.IsType(t, MemoBodyUpdated{}, memoBodyUpdated)

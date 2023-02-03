@@ -41,7 +41,7 @@ func createTestDomainMessage(body string) DomainMessage {
 	return DomainMessage{
 		Playhead:    Playhead(1),
 		EventType:   event.Kind(),
-		Event:       event,
+		Payload:     event,
 		AggregateId: aggregateId,
 		RecordedOn:  time.Now(),
 	}
@@ -147,7 +147,7 @@ func TestEventBus_it_should_still_publish_events_after_exception(t *testing.T) {
 	err := eventBus.publish(domainEventStream1)
 
 	assert.NotNil(t, err)
-	assert.Equal(t, "Error in Event Listener `EventListenerMock` with Message `EventOccurred`. Original error: an error", err.Error())
+	assert.Equal(t, "Error in Payload Listener `EventListenerMock` with Message `EventOccurred`. Original error: an error", err.Error())
 
 	_ = eventBus.publish(domainEventStream2)
 

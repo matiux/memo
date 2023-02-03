@@ -13,9 +13,9 @@ type EventListenerError struct {
 
 func (e EventListenerError) Error() string {
 	return fmt.Sprintf(
-		"Error in Event Listener `%v` with Message `%v`. Original error: %v",
+		"Error in Payload Listener `%v` with Message `%v`. Original error: %v",
 		e.EventListener,
-		e.DomainMessage.Event.Kind(),
+		e.DomainMessage.Payload.Kind(),
 		e.OriginalError,
 	)
 }
@@ -74,5 +74,47 @@ func (eb *SimpleEventBus) publish(domainMessages DomainEventStream) error {
 func NewSimpleEventBus() *SimpleEventBus {
 	return &SimpleEventBus{
 		isPublishing: false,
+	}
+}
+
+type TraceableEventBus struct {
+	EventBus
+	tracing  bool
+	recorded DomainEventStream
+}
+
+func (eb *TraceableEventBus) publish(domainMessages DomainEventStream) error {
+	if err := eb.EventBus.publish(domainMessages); err != nil {
+		return err
+	}
+
+	if !eb.tracing {
+		return nil
+	}
+
+	for _, event := range domainMessages {
+		eb.recorded = append(eb.recorded, event)
+	}
+
+	return nil
+}
+
+func (eb *TraceableEventBus) GetEvents() (events []DomainEvent) {
+
+	for _, event := range eb.recorded {
+		events = append(events, event.Payload)
+	}
+
+	return
+}
+
+func (eb *TraceableEventBus) Trace() {
+	eb.tracing = true
+}
+
+func NewTraceableEventBus(eventBus EventBus) *TraceableEventBus {
+	return &TraceableEventBus{
+		EventBus: eventBus,
+		tracing:  false,
 	}
 }

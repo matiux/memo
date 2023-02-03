@@ -12,7 +12,7 @@ type DomainEventStream []DomainMessage
 type DomainMessage struct {
 	Playhead
 	EventType   string
-	Event       DomainEvent
+	Payload     DomainEvent
 	AggregateId EntityId
 	RecordedOn  time.Time
 }
@@ -21,6 +21,7 @@ type DomainMessage struct {
 type Root interface {
 	getAggregateRootId() EntityId
 	Apply(event DomainEvent) (err error)
+	GetUncommittedEvents() []DomainMessage
 }
 
 // EventSourcedAggregateRoot is the basic struct for an AggregateRoot
@@ -46,7 +47,7 @@ func (e *EventSourcedAggregateRoot) Record(event DomainEvent, aggregate Root) er
 			Playhead: e.Playhead,
 			//EventType:   reflect.ValueOf(event).Kind().String(),
 			EventType:   event.Kind(),
-			Event:       event,
+			Payload:     event,
 			AggregateId: aggregate.getAggregateRootId(),
 			RecordedOn:  event.GetOccurredAt(),
 		},
@@ -62,7 +63,7 @@ func (e *EventSourcedAggregateRoot) InitializeState(stream DomainEventStream, ag
 
 	for _, message := range stream {
 		e.Playhead++
-		if err := e.handleRecursively(message.Event, aggregate); err != nil {
+		if err := e.handleRecursively(message.Payload, aggregate); err != nil {
 			return err
 		}
 	}
@@ -95,4 +96,8 @@ func (e *EventSourcedAggregateRoot) handle(event DomainEvent, aggregate Root) er
 func (e *EventSourcedAggregateRoot) getChildEntities() []EventSourcedEntity {
 
 	return []EventSourcedEntity{}
+}
+
+func (e *EventSourcedAggregateRoot) GetUncommittedEvents() []DomainMessage {
+	return e.UncommittedEvents
 }
