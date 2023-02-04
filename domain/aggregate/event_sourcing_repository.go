@@ -1,22 +1,13 @@
 package aggregate
 
-import (
-	"fmt"
-	"reflect"
-)
-
 type EventSourcingRepository struct {
 	EventStore
 	EventBus
-	aggregateClass reflect.Type
+	aggregateClass Root
 	AggregateFactory
 }
 
 func (esr *EventSourcingRepository) Save(aggregate Root) error {
-
-	if reflect.TypeOf(aggregate) != esr.aggregateClass {
-		return fmt.Errorf("aggregate type mismatch. Expected %v, but got %v", esr.aggregateClass, reflect.TypeOf(aggregate))
-	}
 
 	domainEventStream := aggregate.GetUncommittedEvents()
 	esr.EventStore.Append(aggregate.getAggregateRootId(), domainEventStream)
@@ -25,4 +16,20 @@ func (esr *EventSourcingRepository) Save(aggregate Root) error {
 	}
 
 	return nil
+}
+
+func (esr *EventSourcingRepository) Load(id EntityId) (Root, error) {
+
+	domainEventStream, err := esr.EventStore.Load(id)
+	if err != nil {
+		return nil, err
+	}
+
+	aggregateRoot, err := esr.AggregateFactory.create(esr.aggregateClass, domainEventStream)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return aggregateRoot, nil
 }

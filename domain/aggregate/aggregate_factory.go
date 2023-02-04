@@ -1,26 +1,19 @@
 package aggregate
 
-import (
-	"reflect"
-)
-
 type AggregateFactory interface {
-	create(aggregateClass reflect.Type, domainEventStream DomainEventStream) (Root, error)
+	create(aggregateClass Root, domainEventStream DomainEventStream) (Root, error)
 }
 
 type PublicConstructorAggregateFactory struct {
 }
 
-func (pc *PublicConstructorAggregateFactory) create(aggregateClass reflect.Type, domainEventStream DomainEventStream) (Root, error) {
-	v := reflect.New(aggregateClass)
-	aggregateInstance := v.Elem().Interface().(Root)
+func (pc *PublicConstructorAggregateFactory) create(aggregateClass Root, domainEventStream DomainEventStream) (Root, error) {
 
-	es := EventSourcedAggregateRoot{}
-	if err := es.InitializeState(domainEventStream, aggregateInstance); err != nil {
+	if err := aggregateClass.InitializeState(domainEventStream, aggregateClass); err != nil {
 		return nil, err
 	}
 
-	return aggregateInstance, nil
+	return aggregateClass, nil
 }
 
 //type MyClass struct {

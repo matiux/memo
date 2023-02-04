@@ -4,7 +4,6 @@ import (
 	"fmt"
 )
 
-var EventStreamNotFound = fmt.Errorf("event stream not found")
 var DuplicatePlayhead = fmt.Errorf("duplicate playhead not allowed")
 
 type EventStore interface {
@@ -46,7 +45,7 @@ func (e *InMemoryEventStore) Load(id EntityId) (DomainEventStream, error) {
 	stringId := id.(UUIDv4).Val
 
 	if _, exists := e.stream[stringId]; !exists {
-		return nil, EventStreamNotFound
+		return nil, fmt.Errorf("aggregate with id '%v' not found", id)
 	}
 
 	domainEventStream := DomainEventStream{}
