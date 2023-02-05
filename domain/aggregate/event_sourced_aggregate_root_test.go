@@ -24,5 +24,22 @@ func TestEventSourcedAggregateRoot_it_applies_using_an_incrementing_playhead(t *
 }
 
 func TestEventSourcedAggregateRoot_it_sets_internal_playhead_when_initializing(t *testing.T) {
-	// TODO
+
+	memoCreatedDomainMessage, _ := createEvents()
+
+	memo := &aggregate.Memo{}
+	_ = memo.InitializeState(
+		aggregate.DomainEventStream{
+			memoCreatedDomainMessage,
+		},
+		memo,
+	)
+
+	_ = memo.Record(memoCreatedDomainMessage.Payload, memo)
+
+	eventStream := memo.GetUncommittedEvents()
+
+	assert.Len(t, eventStream, 1)
+	assert.Equal(t, aggregate.Playhead(2), eventStream[0].Playhead)
+
 }

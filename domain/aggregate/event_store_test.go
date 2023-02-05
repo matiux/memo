@@ -6,35 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
-	"time"
 )
-
-var memoCreatedDomainMessage aggregate.DomainMessage
-var memoBodyUpdatedDomainMessage aggregate.DomainMessage
-
-func setupTestEventStore() {
-
-	memoCreatedDomainMessage = aggregate.DomainMessage{
-		Playhead:    aggregate.Playhead(1),
-		EventType:   "MemoCreated",
-		Payload:     aggregate.NewMemoCreated(memoId, body, creationDate),
-		AggregateId: memoId,
-		RecordedOn:  time.Now(),
-	}
-
-	memoBodyUpdatedDomainMessage = aggregate.DomainMessage{
-		Playhead:    aggregate.Playhead(2),
-		EventType:   "MemoBodyUpdated",
-		Payload:     aggregate.NewMemoBodyUpdated(memoId, "Vegetables and fruits are good", time.Now()),
-		AggregateId: memoId,
-		RecordedOn:  time.Now(),
-	}
-
-}
 
 func TestEventStore_Append(t *testing.T) {
 
-	setupTestEventStore()
+	memoCreatedDomainMessage, memoBodyUpdatedDomainMessage := createEvents()
 
 	eventStore := aggregate.NewInMemoryEventStore()
 
@@ -56,7 +32,7 @@ func TestEventStore_Append(t *testing.T) {
 
 func TestEventStore_Load(t *testing.T) {
 
-	setupTestEventStore()
+	memoCreatedDomainMessage, memoBodyUpdatedDomainMessage := createEvents()
 
 	eventStore := &aggregate.InMemoryEventStore{
 		Stream: make(map[string]map[aggregate.Playhead]aggregate.DomainMessage),
@@ -76,7 +52,7 @@ func TestEventStore_Load(t *testing.T) {
 
 func TestEventStore_DuplicatedPlayhead(t *testing.T) {
 
-	setupTestEventStore()
+	memoCreatedDomainMessage, memoBodyUpdatedDomainMessage := createEvents()
 
 	eventStore := &aggregate.InMemoryEventStore{
 		Stream: make(map[string]map[aggregate.Playhead]aggregate.DomainMessage),

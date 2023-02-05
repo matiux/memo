@@ -1,17 +1,17 @@
 package aggregate
 
 type EventSourcingRepository struct {
-	EventStore
-	EventBus
-	AggregateClass Root
-	AggregateFactory
+	eventStore       EventStore
+	eventBus         EventBus
+	aggregateClass   Root
+	aggregateFactory AggregateFactory
 }
 
 func (esr *EventSourcingRepository) Save(aggregate Root) error {
 
 	domainEventStream := aggregate.GetUncommittedEvents()
-	esr.EventStore.Append(aggregate.GetAggregateRootId(), domainEventStream)
-	if err := esr.EventBus.Publish(domainEventStream); err != nil {
+	esr.eventStore.Append(aggregate.GetAggregateRootId(), domainEventStream)
+	if err := esr.eventBus.Publish(domainEventStream); err != nil {
 		return err
 	}
 
@@ -20,16 +20,30 @@ func (esr *EventSourcingRepository) Save(aggregate Root) error {
 
 func (esr *EventSourcingRepository) Load(id EntityId) (Root, error) {
 
-	domainEventStream, err := esr.EventStore.Load(id)
+	domainEventStream, err := esr.eventStore.Load(id)
 	if err != nil {
 		return nil, err
 	}
 
-	aggregateRoot, err := esr.AggregateFactory.create(esr.AggregateClass, domainEventStream)
+	aggregateRoot, err := esr.aggregateFactory.create(esr.aggregateClass, domainEventStream)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return aggregateRoot, nil
+}
+
+func NewEventSourcingRepository(
+	store EventStore,
+	bus EventBus,
+	aggregateClass Root,
+	aggregateFactory AggregateFactory,
+) EventSourcingRepository {
+	return EventSourcingRepository{
+		eventStore:       store,
+		eventBus:         bus,
+		aggregateClass:   aggregateClass,
+		aggregateFactory: aggregateFactory,
+	}
 }

@@ -8,48 +8,21 @@ import (
 	"time"
 )
 
-var eventStore *aggregate.TraceableEventStore
-var traceableEventBus *aggregate.TraceableEventBus
-var eventSourcingRepository aggregate.EventSourcingRepository
-
-func setupTestEventSourcingRepository() {
-
-	eventStore = aggregate.NewTraceableEventStore(aggregate.NewInMemoryEventStore())
-	eventStore.Trace()
-
-	traceableEventBus = aggregate.NewTraceableEventBus(
-		&aggregate.SimpleEventBus{
-			EventListeners: nil,
-			Queue:          nil,
-			IsPublishing:   false,
-		},
-	)
-	traceableEventBus.Trace()
-
-	eventSourcingRepository = aggregate.EventSourcingRepository{
-		EventStore:       eventStore,
-		EventBus:         traceableEventBus,
-		AggregateClass:   &aggregate.Memo{},
-		AggregateFactory: &aggregate.PublicConstructorAggregateFactory{},
-	}
-}
-
 func TestEventSourcingRepository_it_adds_an_aggregate_root(t *testing.T) {
 
-	setupTestEventSourcingRepository()
-
+	eventStore, eventBus, eventSourcingRepository := setupTestEventSourcingRepository()
 	memo := createMemo()
 
 	err := eventSourcingRepository.Save(memo)
 
 	assert.Nil(t, err)
 	assert.Len(t, eventStore.GetEvents(), 1)
-	assert.Len(t, traceableEventBus.GetEvents(), 1)
+	assert.Len(t, eventBus.GetEvents(), 1)
 }
 
 func TestEventSourcingRepository_it_loads_an_aggregate(t *testing.T) {
 
-	setupTestEventSourcingRepository()
+	eventStore, _, eventSourcingRepository := setupTestEventSourcingRepository()
 
 	memoCreatedDomainMessage := aggregate.DomainMessage{
 		Playhead:    aggregate.Playhead(1),
@@ -79,7 +52,7 @@ func TestEventSourcingRepository_it_loads_an_aggregate(t *testing.T) {
 
 func TestEventSourcingRepository_it_return_an_error_if_aggregate_was_not_found(t *testing.T) {
 
-	setupTestEventSourcingRepository()
+	_, _, eventSourcingRepository := setupTestEventSourcingRepository()
 
 	aggregateId := aggregate.NewUUIDv4()
 
