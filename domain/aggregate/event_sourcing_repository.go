@@ -3,15 +3,15 @@ package aggregate
 type EventSourcingRepository struct {
 	EventStore
 	EventBus
-	aggregateClass Root
+	AggregateClass Root
 	AggregateFactory
 }
 
 func (esr *EventSourcingRepository) Save(aggregate Root) error {
 
 	domainEventStream := aggregate.GetUncommittedEvents()
-	esr.EventStore.Append(aggregate.getAggregateRootId(), domainEventStream)
-	if err := esr.EventBus.publish(domainEventStream); err != nil {
+	esr.EventStore.Append(aggregate.GetAggregateRootId(), domainEventStream)
+	if err := esr.EventBus.Publish(domainEventStream); err != nil {
 		return err
 	}
 
@@ -25,7 +25,7 @@ func (esr *EventSourcingRepository) Load(id EntityId) (Root, error) {
 		return nil, err
 	}
 
-	aggregateRoot, err := esr.AggregateFactory.create(esr.aggregateClass, domainEventStream)
+	aggregateRoot, err := esr.AggregateFactory.create(esr.AggregateClass, domainEventStream)
 
 	if err != nil {
 		return nil, err

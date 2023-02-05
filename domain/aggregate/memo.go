@@ -14,24 +14,24 @@ func NewMemoBodyUpdated(id UUIDv4, body string, updatedAd time.Time) MemoBodyUpd
 
 type Memo struct {
 	EventSourcedAggregateRoot
-	id           UUIDv4
-	body         string
-	creationDate time.Time
+	Id           UUIDv4
+	Body         string
+	CreationDate time.Time
 }
 
-func (m *Memo) getAggregateRootId() EntityId {
-	return m.id
+func (m *Memo) GetAggregateRootId() EntityId {
+	return m.Id
 }
 
 func (m *Memo) Apply(event DomainEvent) (err error) {
 
 	switch t := event.(type) {
 	case MemoCreated:
-		m.id = t.id
-		m.body = t.body
-		m.creationDate = t.GetOccurredAt()
+		m.Id = t.Id
+		m.Body = t.Body
+		m.CreationDate = t.GetOccurredAt()
 	case MemoBodyUpdated:
-		m.body = t.body
+		m.Body = t.body
 	default:
 		err = ErrEventNotRegistered
 	}
@@ -46,8 +46,8 @@ func (m *Memo) create(id UUIDv4, body string, creationDate time.Time) {
 	}
 }
 
-func (m *Memo) updateBody(body string, updatedAd time.Time) {
-	event := NewMemoBodyUpdated(m.id, body, updatedAd)
+func (m *Memo) UpdateBody(body string, updatedAd time.Time) {
+	event := NewMemoBodyUpdated(m.Id, body, updatedAd)
 	if err := m.Record(event, m); err != nil {
 		panic(err)
 	}

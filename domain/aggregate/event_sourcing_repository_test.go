@@ -1,47 +1,44 @@
-package aggregate
+package aggregate_test
 
 import (
 	"fmt"
+	"github.com/matiux/memo/domain/aggregate"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
-var eventStore *TraceableEventStore
-var traceableEventBus *TraceableEventBus
-var eventSourcingRepository EventSourcingRepository
+var eventStore *aggregate.TraceableEventStore
+var traceableEventBus *aggregate.TraceableEventBus
+var eventSourcingRepository aggregate.EventSourcingRepository
 
-func setupEventSourcingRepository() {
+func setupTestEventSourcingRepository() {
 
-	eventStore = NewTraceableEventStore(NewInMemoryEventStore())
+	eventStore = aggregate.NewTraceableEventStore(aggregate.NewInMemoryEventStore())
 	eventStore.Trace()
 
-	traceableEventBus = NewTraceableEventBus(
-		&SimpleEventBus{
-			eventListeners: nil,
-			queue:          nil,
-			isPublishing:   false,
+	traceableEventBus = aggregate.NewTraceableEventBus(
+		&aggregate.SimpleEventBus{
+			EventListeners: nil,
+			Queue:          nil,
+			IsPublishing:   false,
 		},
 	)
 	traceableEventBus.Trace()
 
-	eventSourcingRepository = EventSourcingRepository{
+	eventSourcingRepository = aggregate.EventSourcingRepository{
 		EventStore:       eventStore,
 		EventBus:         traceableEventBus,
-		aggregateClass:   &Memo{},
-		AggregateFactory: &PublicConstructorAggregateFactory{},
+		AggregateClass:   &aggregate.Memo{},
+		AggregateFactory: &aggregate.PublicConstructorAggregateFactory{},
 	}
 }
 
 func TestEventSourcingRepository_it_adds_an_aggregate_root(t *testing.T) {
 
-	setupEventSourcingRepository()
+	setupTestEventSourcingRepository()
 
-	memoId := NewUUIDv4()
-	body := "Vegetables are good"
-	creationDate := time.Now()
-
-	memo := NewMemo(memoId, body, creationDate)
+	memo := createMemo()
 
 	err := eventSourcingRepository.Save(memo)
 
@@ -52,43 +49,39 @@ func TestEventSourcingRepository_it_adds_an_aggregate_root(t *testing.T) {
 
 func TestEventSourcingRepository_it_loads_an_aggregate(t *testing.T) {
 
-	setupEventSourcingRepository()
+	setupTestEventSourcingRepository()
 
-	aggregateId = NewUUIDv4()
-	body := "Vegetables are good"
-	creationDate := time.Now()
-
-	memoCreatedDomainMessage = DomainMessage{
-		Playhead:    Playhead(1),
+	memoCreatedDomainMessage := aggregate.DomainMessage{
+		Playhead:    aggregate.Playhead(1),
 		EventType:   "MemoCreated",
-		Payload:     NewMemoCreated(aggregateId, body, creationDate),
-		AggregateId: aggregateId,
+		Payload:     aggregate.NewMemoCreated(memoId, body, creationDate),
+		AggregateId: memoId,
 		RecordedOn:  time.Now(),
 	}
 
-	eventStream := DomainEventStream{
+	eventStream := aggregate.DomainEventStream{
 		memoCreatedDomainMessage,
 	}
 
-	eventStore.Append(aggregateId, eventStream)
+	eventStore.Append(memoId, eventStream)
 
-	aggregate, err := eventSourcingRepository.Load(aggregateId)
-	expectedMemo := NewMemo(aggregateId, body, creationDate)
+	aggregate1, err := eventSourcingRepository.Load(memoId)
+	expectedMemo := aggregate.NewMemo(memoId, body, creationDate)
 
 	assert.Nil(t, err)
 
-	var actualMemo = aggregate.(*Memo)
+	var actualMemo = aggregate1.(*aggregate.Memo)
 
-	assert.True(t, expectedMemo.id.Equals(aggregate.getAggregateRootId()))
-	assert.Equal(t, expectedMemo.body, actualMemo.body)
-	assert.Equal(t, expectedMemo.creationDate, actualMemo.creationDate)
+	assert.True(t, expectedMemo.Id.Equals(actualMemo.GetAggregateRootId()))
+	assert.Equal(t, expectedMemo.Body, actualMemo.Body)
+	assert.Equal(t, expectedMemo.CreationDate, actualMemo.CreationDate)
 }
 
 func TestEventSourcingRepository_it_return_an_error_if_aggregate_was_not_found(t *testing.T) {
 
-	setupEventSourcingRepository()
+	setupTestEventSourcingRepository()
 
-	aggregateId = NewUUIDv4()
+	aggregateId := aggregate.NewUUIDv4()
 
 	_, err := eventSourcingRepository.Load(aggregateId)
 

@@ -21,43 +21,43 @@ func (e EventListenerError) Error() string {
 }
 
 type EventListener interface {
-	handle(message DomainMessage) error
+	Handle(message DomainMessage) error
 }
 
 type EventBus interface {
-	subscribe(eventListener EventListener)
-	publish(domainMessages DomainEventStream) error
+	Subscribe(eventListener EventListener)
+	Publish(domainMessages DomainEventStream) error
 }
 
 type SimpleEventBus struct {
-	eventListeners []EventListener
-	queue          []DomainMessage
-	isPublishing   bool
+	EventListeners []EventListener
+	Queue          []DomainMessage
+	IsPublishing   bool
 }
 
-func (eb *SimpleEventBus) subscribe(eventListener EventListener) {
-	eb.eventListeners = append(eb.eventListeners, eventListener)
+func (eb *SimpleEventBus) Subscribe(eventListener EventListener) {
+	eb.EventListeners = append(eb.EventListeners, eventListener)
 }
 
-func (eb *SimpleEventBus) publish(domainMessages DomainEventStream) error {
+func (eb *SimpleEventBus) Publish(domainMessages DomainEventStream) error {
 	for _, domainMessage := range domainMessages {
-		eb.queue = append(eb.queue, domainMessage)
+		eb.Queue = append(eb.Queue, domainMessage)
 	}
 
 	defer func() {
-		eb.isPublishing = false
+		eb.IsPublishing = false
 	}()
 
-	if !eb.isPublishing {
-		eb.isPublishing = true
+	if !eb.IsPublishing {
+		eb.IsPublishing = true
 
-		for len(eb.queue) > 0 {
+		for len(eb.Queue) > 0 {
 
-			domainMessage := eb.queue[0]
-			eb.queue = eb.queue[1:]
+			domainMessage := eb.Queue[0]
+			eb.Queue = eb.Queue[1:]
 
-			for _, eventListener := range eb.eventListeners {
-				if err := eventListener.handle(domainMessage); err != nil {
+			for _, eventListener := range eb.EventListeners {
+				if err := eventListener.Handle(domainMessage); err != nil {
 					return EventListenerError{
 						EventListener: reflect.TypeOf(eventListener).Elem().Name(),
 						DomainMessage: domainMessage,
@@ -73,7 +73,7 @@ func (eb *SimpleEventBus) publish(domainMessages DomainEventStream) error {
 
 func NewSimpleEventBus() *SimpleEventBus {
 	return &SimpleEventBus{
-		isPublishing: false,
+		IsPublishing: false,
 	}
 }
 
@@ -83,8 +83,8 @@ type TraceableEventBus struct {
 	recorded DomainEventStream
 }
 
-func (eb *TraceableEventBus) publish(domainMessages DomainEventStream) error {
-	if err := eb.EventBus.publish(domainMessages); err != nil {
+func (eb *TraceableEventBus) Publish(domainMessages DomainEventStream) error {
+	if err := eb.EventBus.Publish(domainMessages); err != nil {
 		return err
 	}
 

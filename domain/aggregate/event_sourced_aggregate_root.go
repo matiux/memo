@@ -24,7 +24,7 @@ type DomainMessage struct {
 
 // Root represents an AggregateRoot
 type Root interface {
-	getAggregateRootId() EntityId
+	GetAggregateRootId() EntityId
 	Apply(event DomainEvent) (err error)
 	GetUncommittedEvents() []DomainMessage
 	InitializeState(stream DomainEventStream, aggregate Root) error
@@ -54,7 +54,7 @@ func (e *EventSourcedAggregateRoot) Record(event DomainEvent, aggregate Root) er
 			//EventType:   reflect.ValueOf(event).Kind().String(),
 			EventType:   event.Kind(),
 			Payload:     event,
-			AggregateId: aggregate.getAggregateRootId(),
+			AggregateId: aggregate.GetAggregateRootId(),
 			RecordedOn:  event.GetOccurredAt(),
 		},
 	)

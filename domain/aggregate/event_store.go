@@ -13,21 +13,21 @@ type EventStore interface {
 }
 
 type InMemoryEventStore struct {
-	stream map[string]map[Playhead]DomainMessage
+	Stream map[string]map[Playhead]DomainMessage
 }
 
 func (e *InMemoryEventStore) Append(id EntityId, eventStream DomainEventStream) {
 
 	stringId := id.(UUIDv4).Val
 
-	if _, exists := e.stream[stringId]; !exists {
-		e.stream[stringId] = make(map[Playhead]DomainMessage)
+	if _, exists := e.Stream[stringId]; !exists {
+		e.Stream[stringId] = make(map[Playhead]DomainMessage)
 	}
 
-	e.assertStream(e.stream[stringId], eventStream)
+	e.assertStream(e.Stream[stringId], eventStream)
 
 	for _, domainMessage := range eventStream {
-		e.stream[stringId][domainMessage.Playhead] = domainMessage
+		e.Stream[stringId][domainMessage.Playhead] = domainMessage
 	}
 }
 
@@ -44,13 +44,13 @@ func (e *InMemoryEventStore) Load(id EntityId) (DomainEventStream, error) {
 
 	stringId := id.(UUIDv4).Val
 
-	if _, exists := e.stream[stringId]; !exists {
+	if _, exists := e.Stream[stringId]; !exists {
 		return nil, fmt.Errorf("aggregate with id '%v' not found", id)
 	}
 
 	domainEventStream := DomainEventStream{}
 
-	for _, domainMessage := range e.stream[stringId] {
+	for _, domainMessage := range e.Stream[stringId] {
 		domainEventStream = append(domainEventStream, domainMessage)
 	}
 
@@ -59,7 +59,7 @@ func (e *InMemoryEventStore) Load(id EntityId) (DomainEventStream, error) {
 
 func NewInMemoryEventStore() *InMemoryEventStore {
 	return &InMemoryEventStore{
-		stream: make(map[string]map[Playhead]DomainMessage),
+		Stream: make(map[string]map[Playhead]DomainMessage),
 	}
 }
 

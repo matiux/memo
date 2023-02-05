@@ -21,8 +21,8 @@ func (e BasicEvent) GetOccurredAt() time.Time {
 }
 
 type MemoCreated struct {
-	id   UUIDv4
-	body string
+	Id   UUIDv4
+	Body string
 	BasicEvent
 }
 

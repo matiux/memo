@@ -1,35 +1,32 @@
-package aggregate
+package aggregate_test
 
 import (
 	"fmt"
+	"github.com/matiux/memo/domain/aggregate"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 	"time"
 )
 
-var aggregateId UUIDv4
-var memoCreatedDomainMessage DomainMessage
-var memoBodyUpdatedDomainMessage DomainMessage
+var memoCreatedDomainMessage aggregate.DomainMessage
+var memoBodyUpdatedDomainMessage aggregate.DomainMessage
 
 func setupTestEventStore() {
-	aggregateId = NewUUIDv4()
-	body := "Vegetables are good"
-	creationDate := time.Now()
 
-	memoCreatedDomainMessage = DomainMessage{
-		Playhead:    Playhead(1),
+	memoCreatedDomainMessage = aggregate.DomainMessage{
+		Playhead:    aggregate.Playhead(1),
 		EventType:   "MemoCreated",
-		Payload:     NewMemoCreated(aggregateId, body, creationDate),
-		AggregateId: aggregateId,
+		Payload:     aggregate.NewMemoCreated(memoId, body, creationDate),
+		AggregateId: memoId,
 		RecordedOn:  time.Now(),
 	}
 
-	memoBodyUpdatedDomainMessage = DomainMessage{
-		Playhead:    Playhead(2),
+	memoBodyUpdatedDomainMessage = aggregate.DomainMessage{
+		Playhead:    aggregate.Playhead(2),
 		EventType:   "MemoBodyUpdated",
-		Payload:     NewMemoBodyUpdated(aggregateId, "Vegetables and fruits are good", time.Now()),
-		AggregateId: aggregateId,
+		Payload:     aggregate.NewMemoBodyUpdated(memoId, "Vegetables and fruits are good", time.Now()),
+		AggregateId: memoId,
 		RecordedOn:  time.Now(),
 	}
 
@@ -39,57 +36,57 @@ func TestEventStore_Append(t *testing.T) {
 
 	setupTestEventStore()
 
-	eventStore := NewInMemoryEventStore()
+	eventStore := aggregate.NewInMemoryEventStore()
 
-	eventStream := DomainEventStream{
+	eventStream := aggregate.DomainEventStream{
 		memoCreatedDomainMessage,
 		memoBodyUpdatedDomainMessage,
 	}
 
-	eventStore.Append(aggregateId, eventStream)
+	eventStore.Append(memoId, eventStream)
 
-	assert.Len(t, eventStore.stream, 1)
-	assert.Contains(t, eventStore.stream, aggregateId.Val)
-	assert.Len(t, eventStore.stream[aggregateId.Val], 2)
-	assert.Contains(t, eventStore.stream[aggregateId.Val], Playhead(1))
-	assert.Contains(t, eventStore.stream[aggregateId.Val], Playhead(2))
-	assert.True(t, reflect.DeepEqual(memoCreatedDomainMessage, eventStore.stream[aggregateId.Val][Playhead(1)]))
-	assert.True(t, reflect.DeepEqual(memoBodyUpdatedDomainMessage, eventStore.stream[aggregateId.Val][Playhead(2)]))
+	assert.Len(t, eventStore.Stream, 1)
+	assert.Contains(t, eventStore.Stream, memoId.Val)
+	assert.Len(t, eventStore.Stream[memoId.Val], 2)
+	assert.Contains(t, eventStore.Stream[memoId.Val], aggregate.Playhead(1))
+	assert.Contains(t, eventStore.Stream[memoId.Val], aggregate.Playhead(2))
+	assert.True(t, reflect.DeepEqual(memoCreatedDomainMessage, eventStore.Stream[memoId.Val][aggregate.Playhead(1)]))
+	assert.True(t, reflect.DeepEqual(memoBodyUpdatedDomainMessage, eventStore.Stream[memoId.Val][aggregate.Playhead(2)]))
 }
 
 func TestEventStore_Load(t *testing.T) {
 
 	setupTestEventStore()
 
-	eventStore := &InMemoryEventStore{
-		stream: make(map[string]map[Playhead]DomainMessage),
+	eventStore := &aggregate.InMemoryEventStore{
+		Stream: make(map[string]map[aggregate.Playhead]aggregate.DomainMessage),
 	}
 
-	eventStore.Append(aggregateId, DomainEventStream{
+	eventStore.Append(memoId, aggregate.DomainEventStream{
 		memoCreatedDomainMessage,
 		memoBodyUpdatedDomainMessage,
 	})
 
-	domainEventStream, _ := eventStore.Load(aggregateId)
+	domainEventStream, _ := eventStore.Load(memoId)
 
 	assert.Len(t, domainEventStream, 2)
-	assert.True(t, domainEventStream[0].AggregateId.Equals(aggregateId))
-	assert.True(t, domainEventStream[1].AggregateId.Equals(aggregateId))
+	assert.True(t, domainEventStream[0].AggregateId.Equals(memoId))
+	assert.True(t, domainEventStream[1].AggregateId.Equals(memoId))
 }
 
 func TestEventStore_DuplicatedPlayhead(t *testing.T) {
 
 	setupTestEventStore()
 
-	eventStore := &InMemoryEventStore{
-		stream: make(map[string]map[Playhead]DomainMessage),
+	eventStore := &aggregate.InMemoryEventStore{
+		Stream: make(map[string]map[aggregate.Playhead]aggregate.DomainMessage),
 	}
 
-	eventStore.Append(aggregateId, DomainEventStream{
+	eventStore.Append(memoId, aggregate.DomainEventStream{
 		memoCreatedDomainMessage,
 	})
 
-	memoBodyUpdatedDomainMessage.Playhead = Playhead(1)
+	memoBodyUpdatedDomainMessage.Playhead = aggregate.Playhead(1)
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -99,7 +96,7 @@ func TestEventStore_DuplicatedPlayhead(t *testing.T) {
 		}
 	}()
 
-	eventStore.Append(aggregateId, DomainEventStream{
+	eventStore.Append(memoId, aggregate.DomainEventStream{
 		memoBodyUpdatedDomainMessage,
 	})
 }
