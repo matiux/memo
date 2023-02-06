@@ -66,6 +66,7 @@ func (e *EventSourcedAggregateRoot) InitializeState(stream DomainEventStream, ag
 
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
+	e.Playhead = 0
 
 	for _, message := range stream {
 		e.Playhead++

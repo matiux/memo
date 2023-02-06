@@ -25,6 +25,10 @@ func (m Memos) ById(idMemo UUIDv4) (*Memo, error) {
 	return memo, nil
 }
 
+func (m Memos) Update(memo *Memo) error {
+	return m.Add(memo)
+}
+
 func NewMemos(store EventStore, bus EventBus) Memos {
 	return Memos{
 		EventSourcingRepository{
