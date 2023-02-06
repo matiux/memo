@@ -3,7 +3,6 @@ package aggregate
 type EventSourcingRepository struct {
 	eventStore       EventStore
 	eventBus         EventBus
-	aggregateClass   Root
 	aggregateFactory AggregateFactory
 }
 
@@ -18,14 +17,14 @@ func (esr *EventSourcingRepository) Save(aggregate Root) error {
 	return nil
 }
 
-func (esr *EventSourcingRepository) Load(id EntityId) (Root, error) {
+func (esr *EventSourcingRepository) Load(id EntityId, aggregate Root) (Root, error) {
 
 	domainEventStream, err := esr.eventStore.Load(id)
 	if err != nil {
 		return nil, err
 	}
 
-	aggregateRoot, err := esr.aggregateFactory.create(esr.aggregateClass, domainEventStream)
+	aggregateRoot, err := esr.aggregateFactory.create(aggregate, domainEventStream)
 
 	if err != nil {
 		return nil, err
@@ -37,13 +36,11 @@ func (esr *EventSourcingRepository) Load(id EntityId) (Root, error) {
 func NewEventSourcingRepository(
 	store EventStore,
 	bus EventBus,
-	aggregateClass Root,
 	aggregateFactory AggregateFactory,
 ) EventSourcingRepository {
 	return EventSourcingRepository{
 		eventStore:       store,
 		eventBus:         bus,
-		aggregateClass:   aggregateClass,
 		aggregateFactory: aggregateFactory,
 	}
 }

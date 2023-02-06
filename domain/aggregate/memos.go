@@ -14,7 +14,7 @@ func (m Memos) Add(memo *Memo) error {
 
 func (m Memos) ById(idMemo UUIDv4) (*Memo, error) {
 
-	aggregate, err := m.eventSourcingRepository.Load(idMemo)
+	aggregate, err := m.eventSourcingRepository.Load(idMemo, &Memo{})
 
 	if err != nil {
 		return nil, err
@@ -34,7 +34,6 @@ func NewMemos(store EventStore, bus EventBus) Memos {
 		EventSourcingRepository{
 			eventStore:       store,
 			eventBus:         bus,
-			aggregateClass:   &Memo{},
 			aggregateFactory: &PublicConstructorAggregateFactory{},
 		},
 	}

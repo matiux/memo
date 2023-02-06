@@ -38,7 +38,7 @@ func TestEventSourcingRepository_it_loads_an_aggregate(t *testing.T) {
 
 	eventStore.Append(memoId, eventStream)
 
-	aggregate1, err := eventSourcingRepository.Load(memoId)
+	aggregate1, err := eventSourcingRepository.Load(memoId, &aggregate.Memo{})
 	expectedMemo := aggregate.NewMemo(memoId, body, creationDate)
 
 	assert.Nil(t, err)
@@ -56,7 +56,7 @@ func TestEventSourcingRepository_it_return_an_error_if_aggregate_was_not_found(t
 
 	aggregateId := aggregate.NewUUIDv4()
 
-	_, err := eventSourcingRepository.Load(aggregateId)
+	_, err := eventSourcingRepository.Load(aggregateId, &aggregate.Memo{})
 
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), fmt.Sprintf("aggregate with id '%v' not found", aggregateId))
