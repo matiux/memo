@@ -56,7 +56,7 @@ func setupTestEventSourcingRepository() (
 	eventSourcingRepository := aggregate.NewEventSourcingRepository(
 		eventStore,
 		eventBus,
-		&aggregate.PublicConstructorAggregateFactory{},
+		aggregate.PublicConstructorAggregateFactory{},
 	)
 
 	return eventStore, eventBus, eventSourcingRepository

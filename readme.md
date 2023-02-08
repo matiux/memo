@@ -12,3 +12,6 @@ go mod tidy
 ```bash
 go test -v ./...
 ```
+
+### Notes
+https://go.dev/play/p/XJuoAxgljoT

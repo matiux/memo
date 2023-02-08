@@ -5,38 +5,80 @@ import (
 	"reflect"
 )
 
-type MyClass struct {
-	Name string
+type DomainEventStream []string
+
+type EntityRoot struct {
 }
 
-func create(t reflect.Type) {
-	v := reflect.New(t)
-	v.Elem().Field(0).SetString("John")
-	myClassInstance := v.Elem().Interface()
+func (e *EntityRoot) InitializeState(stream DomainEventStream, aggregate Root) error {
+	for _, event := range stream {
+		if err := aggregate.Apply(event); err != nil {
+			return err
+		}
+	}
 
-	fmt.Println(myClassInstance)
-	fmt.Printf("%T\n", myClassInstance)
-	fmt.Printf("%v\n", t)
-	fmt.Printf("%v\n", t)
+	return nil
+}
+
+type Root interface {
+	Apply(event string) (err error)
+	InitializeState(stream DomainEventStream, aggregate Root) error
+}
+
+type Memo struct {
+	name    string
+	surname string
+	EntityRoot
+}
+
+func (m *Memo) Apply(event string) (err error) {
+
+	switch event {
+	case "Matteo":
+		m.name = event
+	case "Galacci":
+		m.surname = event
+	}
+
+	return nil
+}
+
+func create(aggregateClass reflect.Value, domainEventStream DomainEventStream) Root {
+
+	inputs := make([]reflect.Value, 2)
+	inputs[0] = reflect.ValueOf(domainEventStream)
+	//inputs[1] = reflect.ValueOf(aggregateClass.Elem())
+	inputs[1] = aggregateClass.Elem().Addr().Convert(reflect.TypeOf((*Root)(nil)).Elem())
+
+	aggregateClass.MethodByName("InitializeState").Call(inputs)
+
+	return aggregateClass.Interface().(Root)
+
 }
 
 func main() {
-	t := reflect.TypeOf(MyClass{})
-	create(t)
-
+	root := create(reflect.ValueOf(&Memo{}), DomainEventStream{"Matteo", "Galacci"})
+	memo := root.(*Memo)
+	fmt.Println(memo)
 }
 
-//func main() {
-//
-//	id1 := aggregate.NewUUIDv4()
-//	id2 := aggregate.NewUUIDv4()
-//
-//	checkIDs(id1, id2)
+//type MyClass struct {
+//	Name string
 //}
-
-//func checkIDs(id1, id2 aggregate.EntityId) {
-//	fmt.Printf("%v\n", id1.Equals(id2))
-//	fmt.Printf("%T\n", id1)
-//	fmt.Printf("Value id1: %v\n", id1)
-//	fmt.Printf("Value id2: %v\n", id2)
+//
+//func create(t reflect.Type) {
+//	v := reflect.New(t)
+//	v.Elem().Field(0).SetString("John")
+//	myClassInstance := v.Elem().Interface()
+//
+//	fmt.Println(myClassInstance)
+//	fmt.Printf("%T\n", myClassInstance)
+//	fmt.Printf("%v\n", t)
+//	fmt.Printf("%v\n", t)
+//}
+//
+//func main() {
+//	t := reflect.TypeOf(MyClass{})
+//	create(t)
+//
 //}
