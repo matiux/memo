@@ -1,0 +1,33 @@
+version: '3.8'
+
+volumes:
+  memo-database-volume:
+    name: memo-database-volume
+
+networks:
+  memo-network:
+    name: memo-network
+    driver: bridge
+
+services:
+
+  memo-nodejs:
+    image: memo-nodejs
+    build: nodejs
+    working_dir: /var/www/app
+    volumes:
+      - ../:/var/www/app
+    networks:
+      - memo-network
+
+  memo-db:
+    image: mariadb:10.6
+    volumes:
+      - memo-database-volume:/var/lib/mysql
+      - ./mariadb/custom.cnf:/etc/mysql/conf.d/custom.cnf
+      - ./data/db:/docker-entrypoint-initdb.d
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=memo_db
+    networks:
+      - memo-network
