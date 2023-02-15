@@ -132,6 +132,10 @@ func (e eventOccurred) Kind() string {
 	return "eventOccurred"
 }
 
+func (e eventOccurred) MarshalJSON() ([]byte, error) {
+	return nil, nil
+}
+
 type simpleEventBusTestListener struct {
 	aggregate.EventBus
 	publishableStream aggregate.DomainEventStream

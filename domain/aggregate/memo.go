@@ -31,7 +31,7 @@ func (m *Memo) Apply(event DomainEvent) (err error) {
 		m.Body = t.Body
 		m.CreationDate = t.GetOccurredAt()
 	case MemoBodyUpdated:
-		m.Body = t.body
+		m.Body = t.Body
 	default:
 		err = ErrEventNotRegistered
 	}
