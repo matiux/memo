@@ -17,7 +17,7 @@ func setupTestEventBus() {
 
 func createTestDomainMessage(body string) aggregate.DomainMessage {
 
-	event := eventOccurred{aggregate.NewUUIDv4(), body, aggregate.BasicEvent{}}
+	event := &eventOccurred{aggregate.NewUUIDv4(), body, aggregate.BasicEvent{}}
 
 	return aggregate.DomainMessage{
 		Playhead:    aggregate.Playhead(1),
@@ -134,6 +134,11 @@ func (e eventOccurred) Kind() string {
 
 func (e eventOccurred) MarshalJSON() ([]byte, error) {
 	return nil, nil
+}
+
+func (e eventOccurred) UnmarshalJSON(b []byte) error {
+
+	return nil
 }
 
 type simpleEventBusTestListener struct {

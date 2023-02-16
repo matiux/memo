@@ -18,9 +18,9 @@ func TestMemo_it_should_be_create_new_memo(t *testing.T) {
 	assert.Len(t, memo.GetUncommittedEvents(), 1)
 
 	domainMessage := memo.GetUncommittedEvents()[0]
-	memoCreated := domainMessage.Payload.(aggregate.MemoCreated)
+	memoCreated := domainMessage.Payload.(*aggregate.MemoCreated)
 
-	assert.IsType(t, aggregate.MemoCreated{}, memoCreated)
+	assert.IsType(t, &aggregate.MemoCreated{}, memoCreated)
 	assert.Equal(t, aggregate.Playhead(1), domainMessage.Playhead)
 	assert.Equal(t, aggregate.Playhead(1), memo.Playhead)
 
@@ -43,11 +43,11 @@ func TestMemo_it_should_be_update_memo(t *testing.T) {
 
 	assert.Len(t, memo.GetUncommittedEvents(), 2)
 
-	memoCreated := memo.GetUncommittedEvents()[0].Payload.(aggregate.MemoCreated)
-	memoBodyUpdated := memo.GetUncommittedEvents()[1].Payload.(aggregate.MemoBodyUpdated)
+	memoCreated := (memo.GetUncommittedEvents()[0].Payload).(*aggregate.MemoCreated)
+	memoBodyUpdated := (memo.GetUncommittedEvents()[1].Payload).(*aggregate.MemoBodyUpdated)
 
-	assert.IsType(t, aggregate.MemoCreated{}, memoCreated)
-	assert.IsType(t, aggregate.MemoBodyUpdated{}, memoBodyUpdated)
+	assert.IsType(t, &aggregate.MemoCreated{}, memoCreated)
+	assert.IsType(t, &aggregate.MemoBodyUpdated{}, memoBodyUpdated)
 	assert.Equal(t, aggregate.Playhead(1), memo.GetUncommittedEvents()[0].Playhead)
 	assert.Equal(t, aggregate.Playhead(2), memo.GetUncommittedEvents()[1].Playhead)
 

@@ -4,14 +4,6 @@ import (
 	"time"
 )
 
-func NewMemoCreated(id UUIDv4, body string, occurredAt time.Time) MemoCreated {
-	return MemoCreated{id, body, BasicEvent{occurredAt}}
-}
-
-func NewMemoBodyUpdated(id UUIDv4, body string, updatedAd time.Time) MemoBodyUpdated {
-	return MemoBodyUpdated{id, body, BasicEvent{updatedAd}}
-}
-
 type Memo struct {
 	EventSourcedAggregateRoot
 	Id           UUIDv4
@@ -26,11 +18,11 @@ func (m *Memo) GetAggregateRootId() EntityId {
 func (m *Memo) Apply(event DomainEvent) (err error) {
 
 	switch t := event.(type) {
-	case MemoCreated:
+	case *MemoCreated:
 		m.Id = t.Id
 		m.Body = t.Body
 		m.CreationDate = t.GetOccurredAt()
-	case MemoBodyUpdated:
+	case *MemoBodyUpdated:
 		m.Body = t.Body
 	default:
 		err = ErrEventNotRegistered

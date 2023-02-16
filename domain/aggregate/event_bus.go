@@ -12,10 +12,13 @@ type EventListenerError struct {
 }
 
 func (e EventListenerError) Error() string {
+
+	payload := e.DomainMessage.Payload
+
 	return fmt.Sprintf(
 		"Error in Payload Listener `%v` with Message `%v`. Original error: %v",
 		e.EventListener,
-		e.DomainMessage.Payload.Kind(),
+		payload.Kind(),
 		e.OriginalError,
 	)
 }
