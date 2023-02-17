@@ -8,7 +8,16 @@ import (
 	"github.com/matiux/memo/domain/aggregate"
 	"log"
 	"os"
+	"time"
 )
+
+type eventRow struct {
+	uuid       string
+	playhead   int
+	payload    string
+	recordedOn string
+	eventType  string
+}
 
 type MySQLEventStore struct {
 	conn      *sql.DB
@@ -62,22 +71,59 @@ func (e *MySQLEventStore) Load(id aggregate.EntityId) (aggregate.DomainEventStre
 
 	stringId := id.(aggregate.UUIDv4).Val
 
-	var payload string
-
-	statement := e.prepareLoadStatement()
+	var statement = e.prepareLoadStatement()
 	defer statement.Close()
-	err := statement.QueryRow(stringId, 0).Scan(payload)
+	rows, err := statement.Query(stringId, 0)
 	if err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
+		return nil, err
+	}
+	defer rows.Close()
+
+	eventStream := aggregate.DomainEventStream{}
+
+	for rows.Next() {
+
+		var event eventRow
+		if err = rows.Scan(
+			&event.uuid,
+			&event.playhead,
+			&event.payload,
+			&event.recordedOn,
+			&event.eventType,
+		); err != nil {
+			return nil, err
+		}
+
+		eventStream = append(eventStream, e.deserializeEvent(event))
 	}
 
-	return nil, nil
+	return eventStream, nil
+}
+
+func (e *MySQLEventStore) deserializeEvent(row eventRow) aggregate.DomainMessage {
+
+	payload, err := aggregate.EventDeserializerRegistry(row.eventType, row.payload)
+	if err != nil {
+		panic(err)
+	}
+
+	t, _ := time.Parse("2006-01-02\\T15:04:05.000000Z07:00", row.recordedOn)
+
+	domainMessage := aggregate.DomainMessage{
+		Playhead:    aggregate.Playhead(row.playhead),
+		EventType:   row.eventType,
+		Payload:     *payload,
+		AggregateId: aggregate.NewUUIDv4From(row.uuid),
+		RecordedOn:  t,
+	}
+
+	return domainMessage
 }
 
 func (e *MySQLEventStore) prepareLoadStatement() *sql.Stmt {
 
 	query := fmt.Sprintf(
-		"SELECT uuid, playhead, metadata, payload, recorded_on "+
+		"SELECT uuid, playhead, payload, recorded_on, type "+
 			"FROM %v "+
 			"WHERE uuid = ? "+
 			"AND playhead >= ? "+

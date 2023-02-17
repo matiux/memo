@@ -127,6 +127,7 @@ func NewMemoBodyUpdated(id UUIDv4, body string, updatedAd time.Time) *MemoBodyUp
 	return &MemoBodyUpdated{id, body, BasicEvent{updatedAd}}
 }
 
+// EventDeserializerRegistry
 func EventDeserializerRegistry(eventType, payload string) (*DomainEvent, error) {
 	switch eventType {
 	case "MemoCreated":
@@ -134,12 +135,12 @@ func EventDeserializerRegistry(eventType, payload string) (*DomainEvent, error) 
 		_ = json.Unmarshal([]byte(payload), &memoCreated)
 		event := DomainEvent(&memoCreated)
 		return &event, nil
-	case "MemoUpdated":
+	case "MemoBodyUpdated":
 		var memoBodyUpdated MemoBodyUpdated
 		_ = json.Unmarshal([]byte(payload), &memoBodyUpdated)
 		event := DomainEvent(&memoBodyUpdated)
 		return &event, nil
 	}
 
-	return nil, fmt.Errorf("invalid event type")
+	return nil, fmt.Errorf("invalid event type %v", eventType)
 }

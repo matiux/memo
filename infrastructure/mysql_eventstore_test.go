@@ -56,3 +56,40 @@ func TestMySqlEventStore_it_should_append_event_stream(t *testing.T) {
 	assert.Equal(t, 2, counter)
 	db.Exec("TRUNCATE TABLE " + tableName)
 }
+
+func TestMySqlEventStore_it_should_load_event_stream(t *testing.T) {
+	tableName := "events"
+	application.LoadEnv()
+	dsn := os.Getenv("DATABASE_URL")
+	db, _ := sql.Open("mysql", dsn)
+	db.Exec("TRUNCATE TABLE " + tableName)
+
+	eventStore := infrastructure.NewMySQLEventStore(db, tableName)
+
+	var memoId = aggregate.NewUUIDv4()
+	var body = "Vegetables are good"
+	var creationDate = time.Now()
+
+	eventStore.Append(
+		memoId,
+		aggregate.DomainEventStream{
+			aggregate.DomainMessage{
+				Playhead:    aggregate.Playhead(1),
+				EventType:   "MemoCreated",
+				Payload:     aggregate.NewMemoCreated(memoId, body, creationDate),
+				AggregateId: memoId,
+				RecordedOn:  time.Now()},
+			aggregate.DomainMessage{
+				Playhead:    aggregate.Playhead(2),
+				EventType:   "MemoBodyUpdated",
+				Payload:     aggregate.NewMemoBodyUpdated(memoId, "Vegetables and fruits are good", time.Now()),
+				AggregateId: memoId,
+				RecordedOn:  time.Now(),
+			},
+		},
+	)
+
+	domainEventStream, err := eventStore.Load(memoId)
+	assert.Nil(t, err)
+	assert.Len(t, domainEventStream, 2)
+}
