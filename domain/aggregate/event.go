@@ -7,6 +7,7 @@ import (
 )
 
 var ErrEventNotRegistered = fmt.Errorf("event not registered")
+var EventDateFormat = "2006-01-02\\T15:04:05.000000Z07:00"
 
 // DomainEvent -------------------------------------
 type DomainEvent interface {
@@ -45,7 +46,7 @@ func (e *MemoCreated) MarshalJSON() ([]byte, error) {
 	}{
 		Id:         e.Id.Val,
 		Body:       e.Body,
-		OccurredAt: e.occurredAt.Format("2006-01-02\\T15:04:05.000000Z07:00"), //"Y-m-d\\TH:i:s.uP"
+		OccurredAt: e.occurredAt.Format(EventDateFormat), //"Y-m-d\\TH:i:s.uP"
 		//OccurredAt: string(occurredAt),
 	})
 }
@@ -63,7 +64,7 @@ func (e *MemoCreated) UnmarshalJSON(b []byte) error {
 
 	e.Id = NewUUIDv4From(aux.Id)
 	e.Body = aux.Body
-	t, err := time.Parse("2006-01-02\\T15:04:05.000000Z07:00", aux.OccurredAt)
+	t, err := time.Parse(EventDateFormat, aux.OccurredAt)
 	if err != nil {
 		return err
 	}
@@ -96,7 +97,7 @@ func (e *MemoBodyUpdated) MarshalJSON() ([]byte, error) {
 	}{
 		Id:         e.Id.Val,
 		Body:       e.Body,
-		OccurredAt: e.occurredAt.Format("2006-01-02\\T15:04:05.000000Z07:00"), //"Y-m-d\\TH:i:s.uP"
+		OccurredAt: e.occurredAt.Format(EventDateFormat), //"Y-m-d\\TH:i:s.uP"
 		//OccurredAt: string(occurredAt),
 	})
 }
@@ -114,7 +115,7 @@ func (e *MemoBodyUpdated) UnmarshalJSON(b []byte) error {
 
 	e.Id = NewUUIDv4From(aux.Id)
 	e.Body = aux.Body
-	t, err := time.Parse("2006-01-02\\T15:04:05.000000Z07:00", aux.OccurredAt)
+	t, err := time.Parse(EventDateFormat, aux.OccurredAt)
 	if err != nil {
 		return err
 	}
@@ -127,7 +128,7 @@ func NewMemoBodyUpdated(id UUIDv4, body string, updatedAd time.Time) *MemoBodyUp
 	return &MemoBodyUpdated{id, body, BasicEvent{updatedAd}}
 }
 
-// EventDeserializerRegistry
+// EventDeserializerRegistry is a registry to deserialize json events
 func EventDeserializerRegistry(eventType, payload string) (*DomainEvent, error) {
 	switch eventType {
 	case "MemoCreated":

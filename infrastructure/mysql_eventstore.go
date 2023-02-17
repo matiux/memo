@@ -27,20 +27,22 @@ type MySQLEventStore struct {
 func (e *MySQLEventStore) Append(id aggregate.EntityId, eventStream aggregate.DomainEventStream) error {
 
 	_ = id.(aggregate.UUIDv4).Val
-
 	ctx := context.Background()
+
 	tx, err := e.conn.BeginTx(ctx, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for _, domainMessage := range eventStream {
-		stmt, err := tx.Prepare("INSERT INTO memo_db.events(uuid, playhead, payload, metadata, recorded_on, type) VALUES(?, ?, ?, ?, ?, ?)")
+		stmt, err := tx.Prepare(
+			"INSERT INTO memo_db.events(uuid, playhead, payload, metadata, recorded_on, type) VALUES(?, ?, ?, ?, ?, ?)",
+		)
+		defer stmt.Close()
 		if err != nil {
 			tx.Rollback()
 			return err
 		}
-		defer stmt.Close()
 
 		marshaledPayload, _ := json.Marshal(domainMessage.Payload)
 		recOn, _ := json.Marshal(domainMessage.RecordedOn)
@@ -57,14 +59,9 @@ func (e *MySQLEventStore) Append(id aggregate.EntityId, eventStream aggregate.Do
 			tx.Rollback()
 			return err
 		}
-
 	}
 
-	if err = tx.Commit(); err != nil {
-		return err
-	}
-
-	return nil
+	return tx.Commit()
 }
 
 func (e *MySQLEventStore) Load(id aggregate.EntityId) (aggregate.DomainEventStream, error) {
@@ -107,7 +104,7 @@ func (e *MySQLEventStore) deserializeEvent(row eventRow) aggregate.DomainMessage
 		panic(err)
 	}
 
-	t, _ := time.Parse("2006-01-02\\T15:04:05.000000Z07:00", row.recordedOn)
+	t, _ := time.Parse(aggregate.EventDateFormat, row.recordedOn)
 
 	domainMessage := aggregate.DomainMessage{
 		Playhead:    aggregate.Playhead(row.playhead),

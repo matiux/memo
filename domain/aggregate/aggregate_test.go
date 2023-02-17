@@ -1,7 +1,12 @@
 package aggregate_test
 
 import (
+	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/matiux/memo/application"
 	"github.com/matiux/memo/domain/aggregate"
+	"github.com/matiux/memo/infrastructure"
+	"os"
 	"time"
 )
 
@@ -35,15 +40,7 @@ func createEvents() (aggregate.DomainMessage, aggregate.DomainMessage) {
 	return memoCreatedDomainMessage, memoBodyUpdatedDomainMessage
 }
 
-func setupTestEventSourcingRepository() (
-	*aggregate.TraceableEventStore,
-	*aggregate.TraceableEventBus,
-	aggregate.EventSourcingRepository,
-) {
-
-	eventStore := aggregate.NewTraceableEventStore(aggregate.NewInMemoryEventStore())
-	eventStore.Trace()
-
+func createTraceableEventBus() *aggregate.TraceableEventBus {
 	eventBus := aggregate.NewTraceableEventBus(
 		&aggregate.SimpleEventBus{
 			EventListeners: nil,
@@ -52,6 +49,47 @@ func setupTestEventSourcingRepository() (
 		},
 	)
 	eventBus.Trace()
+
+	return eventBus
+}
+
+func setupInMemoryEventSourcingRepository() (
+	*aggregate.TraceableEventStore,
+	*aggregate.TraceableEventBus,
+	aggregate.EventSourcingRepository,
+) {
+
+	eventStore := aggregate.NewTraceableEventStore(aggregate.NewInMemoryEventStore())
+	eventStore.Trace()
+
+	eventBus := createTraceableEventBus()
+
+	eventSourcingRepository := aggregate.NewEventSourcingRepository(
+		eventStore,
+		eventBus,
+		&aggregate.PublicConstructorAggregateFactory{},
+	)
+
+	return eventStore, eventBus, eventSourcingRepository
+}
+
+func setupMySqlEventSourcingRepository() (
+	*aggregate.TraceableEventStore,
+	*aggregate.TraceableEventBus,
+	aggregate.EventSourcingRepository,
+) {
+
+	application.LoadEnv()
+	dsn := os.Getenv("DATABASE_URL")
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		panic(err)
+	}
+
+	eventStore := aggregate.NewTraceableEventStore(infrastructure.NewMySQLEventStore(db, "events"))
+	eventStore.Trace()
+
+	eventBus := createTraceableEventBus()
 
 	eventSourcingRepository := aggregate.NewEventSourcingRepository(
 		eventStore,

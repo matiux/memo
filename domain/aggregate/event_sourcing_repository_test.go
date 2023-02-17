@@ -10,7 +10,7 @@ import (
 
 func TestEventSourcingRepository_it_adds_an_aggregate_root(t *testing.T) {
 
-	eventStore, eventBus, eventSourcingRepository := setupTestEventSourcingRepository()
+	eventStore, eventBus, eventSourcingRepository := setupInMemoryEventSourcingRepository()
 	memo := createMemo()
 
 	err := eventSourcingRepository.Save(memo)
@@ -22,7 +22,7 @@ func TestEventSourcingRepository_it_adds_an_aggregate_root(t *testing.T) {
 
 func TestEventSourcingRepository_it_loads_an_aggregate(t *testing.T) {
 
-	eventStore, _, eventSourcingRepository := setupTestEventSourcingRepository()
+	eventStore, _, eventSourcingRepository := setupInMemoryEventSourcingRepository()
 
 	memoCreatedDomainMessage := aggregate.DomainMessage{
 		Playhead:    aggregate.Playhead(1),
@@ -52,7 +52,7 @@ func TestEventSourcingRepository_it_loads_an_aggregate(t *testing.T) {
 
 func TestEventSourcingRepository_it_return_an_error_if_aggregate_was_not_found(t *testing.T) {
 
-	_, _, eventSourcingRepository := setupTestEventSourcingRepository()
+	_, _, eventSourcingRepository := setupInMemoryEventSourcingRepository()
 
 	aggregateId := aggregate.NewUUIDv4()
 

@@ -8,14 +8,14 @@ import (
 )
 
 func createMemosRepository() aggregate.Memos {
-	eventStore, eventBus, _ := setupTestEventSourcingRepository()
+	eventStore, eventBus, _ := setupInMemoryEventSourcingRepository()
 
 	return aggregate.NewMemos(eventStore, eventBus)
 }
 
-func TestMemos_it_should_add_new_memo(t *testing.T) {
+func TestMemos_it_should_add_new_memo_in_memory(t *testing.T) {
 
-	eventStore, eventBus, _ := setupTestEventSourcingRepository()
+	eventStore, eventBus, _ := setupInMemoryEventSourcingRepository()
 	memo := createMemo()
 
 	memos := aggregate.NewMemos(eventStore, eventBus)
@@ -26,7 +26,7 @@ func TestMemos_it_should_add_new_memo(t *testing.T) {
 	assert.True(t, byIdMemo.Id.Equals(memoId))
 }
 
-func TestMemos_it_should_update_existing_memo(t *testing.T) {
+func TestMemos_it_should_update_existing_memo_in_memory(t *testing.T) {
 
 	memos := createMemosRepository()
 
@@ -42,4 +42,19 @@ func TestMemos_it_should_update_existing_memo(t *testing.T) {
 	updatedMemo, _ := memos.ById(memoId)
 	assert.Equal(t, aggregate.Playhead(2), updatedMemo.Playhead)
 	assert.Equal(t, "Vegetables and fruits are good", updatedMemo.Body)
+}
+
+func TestMemos_it_should_load_memo_by_repository(t *testing.T) {
+
+	eventStore, eventBus, _ := setupMySqlEventSourcingRepository()
+	memo := createMemo()
+
+	memos := aggregate.NewMemos(eventStore, eventBus)
+	_ = memos.Add(memo)
+
+	byIdMemo, _ := memos.ById(memoId)
+
+	assert.True(t, byIdMemo.Id.Equals(memoId))
+	assert.Equal(t, aggregate.Playhead(1), byIdMemo.Playhead)
+	assert.Equal(t, "Vegetables are good", byIdMemo.Body)
 }

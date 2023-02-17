@@ -13,12 +13,18 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func TestMySqlEventStore_it_should_append_event_stream(t *testing.T) {
-
+func prepareConnection() (*sql.DB, string) {
 	tableName := "events"
 	application.LoadEnv()
 	dsn := os.Getenv("DATABASE_URL")
 	db, _ := sql.Open("mysql", dsn)
+
+	return db, tableName
+}
+
+func TestMySqlEventStore_it_should_append_event_stream(t *testing.T) {
+
+	db, tableName := prepareConnection()
 	db.Exec("TRUNCATE TABLE " + tableName)
 
 	eventStore := infrastructure.NewMySQLEventStore(db, tableName)
@@ -58,10 +64,8 @@ func TestMySqlEventStore_it_should_append_event_stream(t *testing.T) {
 }
 
 func TestMySqlEventStore_it_should_load_event_stream(t *testing.T) {
-	tableName := "events"
-	application.LoadEnv()
-	dsn := os.Getenv("DATABASE_URL")
-	db, _ := sql.Open("mysql", dsn)
+
+	db, tableName := prepareConnection()
 	db.Exec("TRUNCATE TABLE " + tableName)
 
 	eventStore := infrastructure.NewMySQLEventStore(db, tableName)
