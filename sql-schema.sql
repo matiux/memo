@@ -10,3 +10,8 @@ create table events
     constraint UNIQ_5387574AD17F50A634B91FA9 unique (uuid, playhead)
 );
 
+create table memo(
+    id char(36) primary key,
+    body longtext     not null,
+    created_at varchar(255)  not null
+);

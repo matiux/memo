@@ -12,7 +12,7 @@ import (
 var eventBus domain.EventBus
 
 func setupTestEventBus() {
-	eventBus = domain.NewSimpleEventBus()
+	eventBus = domain.NewSimpleEventBus([]domain.EventListener{})
 }
 
 func createTestDomainMessage(body string) domain.Message {
@@ -150,11 +150,15 @@ type simpleEventBusTestListener struct {
 func (eb *simpleEventBusTestListener) Handle(message domain.Message) error {
 
 	if !eb.handled {
-		eb.EventBus.Publish(eb.publishableStream)
+		_ = eb.EventBus.Publish(eb.publishableStream)
 		eb.handled = true
 	}
 
 	return nil
+}
+
+func (eb *simpleEventBusTestListener) Support(message domain.Message) bool {
+	return true
 }
 
 type eventListenerMock struct {
@@ -165,4 +169,8 @@ func (m *eventListenerMock) Handle(message domain.Message) error {
 	args := m.Called(message)
 
 	return args.Error(0)
+}
+
+func (m *eventListenerMock) Support(message domain.Message) bool {
+	return true
 }

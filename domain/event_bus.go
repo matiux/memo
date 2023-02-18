@@ -25,6 +25,7 @@ func (e EventListenerError) Error() string {
 
 type EventListener interface {
 	Handle(message Message) error
+	Support(message Message) bool
 }
 
 type EventBus interface {
@@ -62,6 +63,9 @@ func (eventBus *SimpleEventBus) Publish(domainMessages EventStream) error {
 			eventBus.Queue = eventBus.Queue[1:]
 
 			for _, eventListener := range eventBus.EventListeners {
+				if !eventListener.Support(domainMessage) {
+					continue
+				}
 				if err := eventListener.Handle(domainMessage); err != nil {
 					return EventListenerError{
 						EventListener: reflect.TypeOf(eventListener).Elem().Name(),
@@ -76,9 +80,10 @@ func (eventBus *SimpleEventBus) Publish(domainMessages EventStream) error {
 	return nil
 }
 
-func NewSimpleEventBus() *SimpleEventBus {
+func NewSimpleEventBus(eventListeners []EventListener) *SimpleEventBus {
 	return &SimpleEventBus{
-		IsPublishing: false,
+		EventListeners: eventListeners,
+		IsPublishing:   false,
 	}
 }
 

@@ -35,8 +35,8 @@ func (e *MySQLEventStore) Append(id domain.EntityId, eventStream domain.EventStr
 	}
 
 	for _, domainMessage := range eventStream {
-		stmt, err := tx.Prepare(
-			"INSERT INTO memo_db.events(uuid, playhead, payload, metadata, recorded_on, type) VALUES(?, ?, ?, ?, ?, ?)",
+		stmt, err := tx.PrepareContext(
+			ctx, "INSERT INTO memo_db.events(uuid, playhead, payload, metadata, recorded_on, type) VALUES(?, ?, ?, ?, ?, ?)",
 		)
 		defer stmt.Close()
 		if err != nil {
