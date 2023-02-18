@@ -37,7 +37,7 @@ func TestEventBus_it_subscribes_an_event_listener(t *testing.T) {
 	eventListener.On("Handle", domainMessage).Once().Return(nil)
 
 	eventBus.Subscribe(eventListener)
-	err := eventBus.Publish(domain.DomainEventStream{domainMessage})
+	err := eventBus.Publish(domain.EventStream{domainMessage})
 
 	assert.Nil(t, err)
 	eventListener.AssertExpectations(t)
@@ -50,7 +50,7 @@ func TestEventBus_it_publishes_events_to_subscribed_event_listeners(t *testing.T
 	domainMessage1 := createTestDomainMessage("The event Body 1")
 	domainMessage2 := createTestDomainMessage("The event Body 2")
 
-	domainEventStream := domain.DomainEventStream{domainMessage1, domainMessage2}
+	domainEventStream := domain.EventStream{domainMessage1, domainMessage2}
 
 	eventListener1 := &eventListenerMock{}
 	eventListener1.On("Handle", domainMessage1).Once().Return(nil)
@@ -76,11 +76,11 @@ func TestEventBus_it_does_not_dispatch_new_events_before_all_listeners_have_run(
 	domainMessage1 := createTestDomainMessage("The event Body 1")
 	domainMessage2 := createTestDomainMessage("The event Body 2")
 
-	domainEventStream := domain.DomainEventStream{domainMessage1}
+	domainEventStream := domain.EventStream{domainMessage1}
 
 	eventListener1 := simpleEventBusTestListener{
 		eventBus,
-		domain.DomainEventStream{domainMessage2},
+		domain.EventStream{domainMessage2},
 		false,
 	}
 
@@ -103,8 +103,8 @@ func TestEventBus_it_should_still_publish_events_after_exception(t *testing.T) {
 	domainMessage1 := createTestDomainMessage("The event Body 1")
 	domainMessage2 := createTestDomainMessage("The event Body 2")
 
-	domainEventStream1 := domain.DomainEventStream{domainMessage1}
-	domainEventStream2 := domain.DomainEventStream{domainMessage2}
+	domainEventStream1 := domain.EventStream{domainMessage1}
+	domainEventStream2 := domain.EventStream{domainMessage2}
 
 	eventListener := &eventListenerMock{}
 	eventListener.On("Handle", domainMessage1).Once().Return(fmt.Errorf("an error"))
@@ -143,7 +143,7 @@ func (e eventOccurred) UnmarshalJSON(b []byte) error {
 
 type simpleEventBusTestListener struct {
 	domain.EventBus
-	publishableStream domain.DomainEventStream
+	publishableStream domain.EventStream
 	handled           bool
 }
 

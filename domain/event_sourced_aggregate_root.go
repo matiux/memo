@@ -6,7 +6,7 @@ import (
 )
 
 type Playhead int
-type DomainEventStream []DomainMessage
+type EventStream []DomainMessage
 
 type EventSourcedEntity interface {
 	handleRecursively(event Event)
@@ -27,7 +27,7 @@ type Root interface {
 	GetAggregateRootId() EntityId
 	Apply(event Event) (err error)
 	GetUncommittedEvents() []DomainMessage
-	InitializeState(stream DomainEventStream, aggregate Root) error
+	InitializeState(stream EventStream, aggregate Root) error
 }
 
 // EventSourcedAggregateRoot is the basic struct for an AggregateRoot
@@ -62,7 +62,7 @@ func (e *EventSourcedAggregateRoot) Record(event Event, aggregate Root) error {
 	return nil
 }
 
-func (e *EventSourcedAggregateRoot) InitializeState(stream DomainEventStream, aggregate Root) error {
+func (e *EventSourcedAggregateRoot) InitializeState(stream EventStream, aggregate Root) error {
 
 	e.mutex.Lock()
 	defer e.mutex.Unlock()

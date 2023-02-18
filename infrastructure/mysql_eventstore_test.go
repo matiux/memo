@@ -49,7 +49,7 @@ func TestMySqlEventStore_it_should_append_event_stream(t *testing.T) {
 		RecordedOn:  time.Now(),
 	}
 
-	eventStore.Append(memoId, domain.DomainEventStream{memoCreatedDomainMessage, memoBodyUpdatedDomainMessage})
+	eventStore.Append(memoId, domain.EventStream{memoCreatedDomainMessage, memoBodyUpdatedDomainMessage})
 
 	rows, _ := db.Query("SELECT * FROM " + tableName)
 	defer rows.Close()
@@ -76,7 +76,7 @@ func TestMySqlEventStore_it_should_load_event_stream(t *testing.T) {
 
 	eventStore.Append(
 		memoId,
-		domain.DomainEventStream{
+		domain.EventStream{
 			domain.DomainMessage{
 				Playhead:    domain.Playhead(1),
 				EventType:   "MemoCreated",

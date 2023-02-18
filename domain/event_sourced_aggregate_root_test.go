@@ -29,7 +29,7 @@ func TestEventSourcedAggregateRoot_it_sets_internal_playhead_when_initializing(t
 
 	memo := &domain.Memo{}
 	_ = memo.InitializeState(
-		domain.DomainEventStream{
+		domain.EventStream{
 			memoCreatedDomainMessage,
 		},
 		memo,

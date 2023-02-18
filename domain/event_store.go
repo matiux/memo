@@ -7,16 +7,16 @@ import (
 var DuplicatePlayhead = fmt.Errorf("duplicate playhead not allowed")
 
 type EventStore interface {
-	Append(id EntityId, eventStream DomainEventStream) error
-	Load(id EntityId) (DomainEventStream, error)
-	//LoadFromPlayhead(id EntityId, playhead Playhead) DomainEventStream
+	Append(id EntityId, eventStream EventStream) error
+	Load(id EntityId) (EventStream, error)
+	//LoadFromPlayhead(id EntityId, playhead Playhead) EventStream
 }
 
 type InMemoryEventStore struct {
 	Stream map[string]map[Playhead]DomainMessage
 }
 
-func (e *InMemoryEventStore) Append(id EntityId, eventStream DomainEventStream) error {
+func (e *InMemoryEventStore) Append(id EntityId, eventStream EventStream) error {
 
 	stringId := id.(UUIDv4).Val
 
@@ -33,7 +33,7 @@ func (e *InMemoryEventStore) Append(id EntityId, eventStream DomainEventStream) 
 	return nil
 }
 
-func (e *InMemoryEventStore) assertStream(events map[Playhead]DomainMessage, eventsToAppend DomainEventStream) {
+func (e *InMemoryEventStore) assertStream(events map[Playhead]DomainMessage, eventsToAppend EventStream) {
 
 	for _, event := range eventsToAppend {
 		if _, exists := events[event.Playhead]; exists {
@@ -42,7 +42,7 @@ func (e *InMemoryEventStore) assertStream(events map[Playhead]DomainMessage, eve
 	}
 }
 
-func (e *InMemoryEventStore) Load(id EntityId) (DomainEventStream, error) {
+func (e *InMemoryEventStore) Load(id EntityId) (EventStream, error) {
 
 	stringId := id.(UUIDv4).Val
 
@@ -50,7 +50,7 @@ func (e *InMemoryEventStore) Load(id EntityId) (DomainEventStream, error) {
 		return nil, fmt.Errorf("aggregate with id '%v' not found", id)
 	}
 
-	domainEventStream := DomainEventStream{}
+	domainEventStream := EventStream{}
 
 	for _, domainMessage := range e.Stream[stringId] {
 		domainEventStream = append(domainEventStream, domainMessage)
@@ -68,10 +68,10 @@ func NewInMemoryEventStore() *InMemoryEventStore {
 type TraceableEventStore struct {
 	EventStore
 	tracing  bool
-	recorded DomainEventStream
+	recorded EventStream
 }
 
-func (e *TraceableEventStore) Append(id EntityId, eventStream DomainEventStream) error {
+func (e *TraceableEventStore) Append(id EntityId, eventStream EventStream) error {
 	e.EventStore.Append(id, eventStream)
 
 	if !e.tracing {
@@ -99,7 +99,7 @@ func (e *TraceableEventStore) Trace() {
 }
 
 func (e *TraceableEventStore) ClearEvents() {
-	e.recorded = DomainEventStream{}
+	e.recorded = EventStream{}
 }
 
 func NewTraceableEventStore(eventStore EventStore) *TraceableEventStore {

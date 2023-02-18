@@ -29,7 +29,7 @@ type EventListener interface {
 
 type EventBus interface {
 	Subscribe(eventListener EventListener)
-	Publish(domainMessages DomainEventStream) error
+	Publish(domainMessages EventStream) error
 }
 
 type SimpleEventBus struct {
@@ -42,7 +42,7 @@ func (eb *SimpleEventBus) Subscribe(eventListener EventListener) {
 	eb.EventListeners = append(eb.EventListeners, eventListener)
 }
 
-func (eb *SimpleEventBus) Publish(domainMessages DomainEventStream) error {
+func (eb *SimpleEventBus) Publish(domainMessages EventStream) error {
 	for _, domainMessage := range domainMessages {
 		eb.Queue = append(eb.Queue, domainMessage)
 	}
@@ -83,10 +83,10 @@ func NewSimpleEventBus() *SimpleEventBus {
 type TraceableEventBus struct {
 	EventBus
 	tracing  bool
-	recorded DomainEventStream
+	recorded EventStream
 }
 
-func (eb *TraceableEventBus) Publish(domainMessages DomainEventStream) error {
+func (eb *TraceableEventBus) Publish(domainMessages EventStream) error {
 	if err := eb.EventBus.Publish(domainMessages); err != nil {
 		return err
 	}

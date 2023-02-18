@@ -32,7 +32,7 @@ func TestEventSourcingRepository_it_loads_an_aggregate(t *testing.T) {
 		RecordedOn:  time.Now(),
 	}
 
-	eventStream := domain.DomainEventStream{
+	eventStream := domain.EventStream{
 		memoCreatedDomainMessage,
 	}
 

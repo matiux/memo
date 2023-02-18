@@ -24,7 +24,7 @@ type MySQLEventStore struct {
 	tableName string
 }
 
-func (e *MySQLEventStore) Append(id domain.EntityId, eventStream domain.DomainEventStream) error {
+func (e *MySQLEventStore) Append(id domain.EntityId, eventStream domain.EventStream) error {
 
 	_ = id.(domain.UUIDv4).Val
 	ctx := context.Background()
@@ -64,7 +64,7 @@ func (e *MySQLEventStore) Append(id domain.EntityId, eventStream domain.DomainEv
 	return tx.Commit()
 }
 
-func (e *MySQLEventStore) Load(id domain.EntityId) (domain.DomainEventStream, error) {
+func (e *MySQLEventStore) Load(id domain.EntityId) (domain.EventStream, error) {
 
 	stringId := id.(domain.UUIDv4).Val
 
@@ -76,7 +76,7 @@ func (e *MySQLEventStore) Load(id domain.EntityId) (domain.DomainEventStream, er
 	}
 	defer rows.Close()
 
-	eventStream := domain.DomainEventStream{}
+	eventStream := domain.EventStream{}
 
 	for rows.Next() {
 
