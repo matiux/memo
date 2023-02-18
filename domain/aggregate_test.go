@@ -19,9 +19,9 @@ func createMemo() *domain.Memo {
 	return domain.NewMemo(memoId, body, creationDate)
 }
 
-func createEvents() (domain.DomainMessage, domain.DomainMessage) {
+func createEvents() (domain.Message, domain.Message) {
 
-	memoCreatedDomainMessage := domain.DomainMessage{
+	memoCreatedDomainMessage := domain.Message{
 		Playhead:    domain.Playhead(1),
 		EventType:   "MemoCreated",
 		Payload:     domain.NewMemoCreated(memoId, body, creationDate),
@@ -29,7 +29,7 @@ func createEvents() (domain.DomainMessage, domain.DomainMessage) {
 		RecordedOn:  time.Now(),
 	}
 
-	memoBodyUpdatedDomainMessage := domain.DomainMessage{
+	memoBodyUpdatedDomainMessage := domain.Message{
 		Playhead:    domain.Playhead(2),
 		EventType:   "MemoBodyUpdated",
 		Payload:     domain.NewMemoBodyUpdated(memoId, "Vegetables and fruits are good", time.Now()),

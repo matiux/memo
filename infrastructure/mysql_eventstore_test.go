@@ -33,7 +33,7 @@ func TestMySqlEventStore_it_should_append_event_stream(t *testing.T) {
 	var body = "Vegetables are good"
 	var creationDate = time.Now()
 
-	memoCreatedDomainMessage := domain.DomainMessage{
+	memoCreatedDomainMessage := domain.Message{
 		Playhead:    domain.Playhead(1),
 		EventType:   "MemoCreated",
 		Payload:     domain.NewMemoCreated(memoId, body, creationDate),
@@ -41,7 +41,7 @@ func TestMySqlEventStore_it_should_append_event_stream(t *testing.T) {
 		RecordedOn:  time.Now(),
 	}
 
-	memoBodyUpdatedDomainMessage := domain.DomainMessage{
+	memoBodyUpdatedDomainMessage := domain.Message{
 		Playhead:    domain.Playhead(2),
 		EventType:   "MemoBodyUpdated",
 		Payload:     domain.NewMemoBodyUpdated(memoId, "Vegetables and fruits are good", time.Now()),
@@ -77,13 +77,13 @@ func TestMySqlEventStore_it_should_load_event_stream(t *testing.T) {
 	eventStore.Append(
 		memoId,
 		domain.EventStream{
-			domain.DomainMessage{
+			domain.Message{
 				Playhead:    domain.Playhead(1),
 				EventType:   "MemoCreated",
 				Payload:     domain.NewMemoCreated(memoId, body, creationDate),
 				AggregateId: memoId,
 				RecordedOn:  time.Now()},
-			domain.DomainMessage{
+			domain.Message{
 				Playhead:    domain.Playhead(2),
 				EventType:   "MemoBodyUpdated",
 				Payload:     domain.NewMemoBodyUpdated(memoId, "Vegetables and fruits are good", time.Now()),

@@ -7,13 +7,13 @@ import (
 
 type EventListenerError struct {
 	EventListener string
-	DomainMessage
+	Message
 	OriginalError error
 }
 
 func (e EventListenerError) Error() string {
 
-	payload := e.DomainMessage.Payload
+	payload := e.Message.Payload
 
 	return fmt.Sprintf(
 		"Error in Payload Listener `%v` with Message `%v`. Original error: %v",
@@ -24,7 +24,7 @@ func (e EventListenerError) Error() string {
 }
 
 type EventListener interface {
-	Handle(message DomainMessage) error
+	Handle(message Message) error
 }
 
 type EventBus interface {
@@ -34,36 +34,38 @@ type EventBus interface {
 
 type SimpleEventBus struct {
 	EventListeners []EventListener
-	Queue          []DomainMessage
+	Queue          []Message
 	IsPublishing   bool
 }
 
-func (eb *SimpleEventBus) Subscribe(eventListener EventListener) {
-	eb.EventListeners = append(eb.EventListeners, eventListener)
+func (eventBus *SimpleEventBus) Subscribe(eventListener EventListener) {
+	eventBus.EventListeners = append(eventBus.EventListeners, eventListener)
 }
 
-func (eb *SimpleEventBus) Publish(domainMessages EventStream) error {
+func (eventBus *SimpleEventBus) Publish(domainMessages EventStream) error {
+
 	for _, domainMessage := range domainMessages {
-		eb.Queue = append(eb.Queue, domainMessage)
+		eventBus.Queue = append(eventBus.Queue, domainMessage)
 	}
 
-	defer func() {
-		eb.IsPublishing = false
-	}()
+	if !eventBus.IsPublishing {
 
-	if !eb.IsPublishing {
-		eb.IsPublishing = true
+		defer func() {
+			eventBus.IsPublishing = false
+		}()
 
-		for len(eb.Queue) > 0 {
+		eventBus.IsPublishing = true
 
-			domainMessage := eb.Queue[0]
-			eb.Queue = eb.Queue[1:]
+		for len(eventBus.Queue) > 0 {
 
-			for _, eventListener := range eb.EventListeners {
+			domainMessage := eventBus.Queue[0]
+			eventBus.Queue = eventBus.Queue[1:]
+
+			for _, eventListener := range eventBus.EventListeners {
 				if err := eventListener.Handle(domainMessage); err != nil {
 					return EventListenerError{
 						EventListener: reflect.TypeOf(eventListener).Elem().Name(),
-						DomainMessage: domainMessage,
+						Message:       domainMessage,
 						OriginalError: err,
 					}
 				}

@@ -97,7 +97,7 @@ func (e *MySQLEventStore) Load(id domain.EntityId) (domain.EventStream, error) {
 	return eventStream, nil
 }
 
-func (e *MySQLEventStore) deserializeEvent(row eventRow) domain.DomainMessage {
+func (e *MySQLEventStore) deserializeEvent(row eventRow) domain.Message {
 
 	payload, err := domain.EventDeserializerRegistry(row.eventType, row.payload)
 	if err != nil {
@@ -106,7 +106,7 @@ func (e *MySQLEventStore) deserializeEvent(row eventRow) domain.DomainMessage {
 
 	t, _ := time.Parse(domain.EventDateFormat, row.recordedOn)
 
-	domainMessage := domain.DomainMessage{
+	domainMessage := domain.Message{
 		Playhead:    domain.Playhead(row.playhead),
 		EventType:   row.eventType,
 		Payload:     *payload,

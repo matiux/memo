@@ -15,11 +15,11 @@ func setupTestEventBus() {
 	eventBus = domain.NewSimpleEventBus()
 }
 
-func createTestDomainMessage(body string) domain.DomainMessage {
+func createTestDomainMessage(body string) domain.Message {
 
 	event := &eventOccurred{domain.NewUUIDv4(), body, domain.BasicEvent{}}
 
-	return domain.DomainMessage{
+	return domain.Message{
 		Playhead:    domain.Playhead(1),
 		EventType:   event.Kind(),
 		Payload:     event,
@@ -147,7 +147,7 @@ type simpleEventBusTestListener struct {
 	handled           bool
 }
 
-func (eb *simpleEventBusTestListener) Handle(message domain.DomainMessage) error {
+func (eb *simpleEventBusTestListener) Handle(message domain.Message) error {
 
 	if !eb.handled {
 		eb.EventBus.Publish(eb.publishableStream)
@@ -161,7 +161,7 @@ type eventListenerMock struct {
 	mock.Mock
 }
 
-func (m *eventListenerMock) Handle(message domain.DomainMessage) error {
+func (m *eventListenerMock) Handle(message domain.Message) error {
 	args := m.Called(message)
 
 	return args.Error(0)

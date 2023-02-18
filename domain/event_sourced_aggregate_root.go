@@ -6,15 +6,15 @@ import (
 )
 
 type Playhead int
-type EventStream []DomainMessage
+type EventStream []Message
 
 type EventSourcedEntity interface {
 	handleRecursively(event Event)
 	registerAggregateRoot(aggregate Root)
 }
 
-// DomainMessage represents an important change in the domain.
-type DomainMessage struct {
+// Message represents an important change in the domain.
+type Message struct {
 	Playhead
 	EventType   string
 	Payload     Event
@@ -26,13 +26,13 @@ type DomainMessage struct {
 type Root interface {
 	GetAggregateRootId() EntityId
 	Apply(event Event) (err error)
-	GetUncommittedEvents() []DomainMessage
+	GetUncommittedEvents() []Message
 	InitializeState(stream EventStream, aggregate Root) error
 }
 
 // EventSourcedAggregateRoot is the basic struct for an AggregateRoot
 type EventSourcedAggregateRoot struct {
-	uncommittedEvents []DomainMessage
+	uncommittedEvents []Message
 	Playhead
 	mutex sync.Mutex
 }
@@ -49,7 +49,7 @@ func (e *EventSourcedAggregateRoot) Record(event Event, aggregate Root) error {
 	e.Playhead++
 	e.uncommittedEvents = append(
 		e.uncommittedEvents,
-		DomainMessage{
+		Message{
 			Playhead: e.Playhead,
 			//EventType:   reflect.ValueOf(event).Kind().String(),
 			EventType:   event.Kind(),
@@ -104,6 +104,6 @@ func (e *EventSourcedAggregateRoot) getChildEntities() []EventSourcedEntity {
 	return []EventSourcedEntity{}
 }
 
-func (e *EventSourcedAggregateRoot) GetUncommittedEvents() []DomainMessage {
+func (e *EventSourcedAggregateRoot) GetUncommittedEvents() []Message {
 	return e.uncommittedEvents
 }

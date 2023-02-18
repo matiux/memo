@@ -13,7 +13,7 @@ type EventStore interface {
 }
 
 type InMemoryEventStore struct {
-	Stream map[string]map[Playhead]DomainMessage
+	Stream map[string]map[Playhead]Message
 }
 
 func (e *InMemoryEventStore) Append(id EntityId, eventStream EventStream) error {
@@ -21,7 +21,7 @@ func (e *InMemoryEventStore) Append(id EntityId, eventStream EventStream) error 
 	stringId := id.(UUIDv4).Val
 
 	if _, exists := e.Stream[stringId]; !exists {
-		e.Stream[stringId] = make(map[Playhead]DomainMessage)
+		e.Stream[stringId] = make(map[Playhead]Message)
 	}
 
 	e.assertStream(e.Stream[stringId], eventStream)
@@ -33,7 +33,7 @@ func (e *InMemoryEventStore) Append(id EntityId, eventStream EventStream) error 
 	return nil
 }
 
-func (e *InMemoryEventStore) assertStream(events map[Playhead]DomainMessage, eventsToAppend EventStream) {
+func (e *InMemoryEventStore) assertStream(events map[Playhead]Message, eventsToAppend EventStream) {
 
 	for _, event := range eventsToAppend {
 		if _, exists := events[event.Playhead]; exists {
@@ -61,7 +61,7 @@ func (e *InMemoryEventStore) Load(id EntityId) (EventStream, error) {
 
 func NewInMemoryEventStore() *InMemoryEventStore {
 	return &InMemoryEventStore{
-		Stream: make(map[string]map[Playhead]DomainMessage),
+		Stream: make(map[string]map[Playhead]Message),
 	}
 }
 

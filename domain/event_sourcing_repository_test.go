@@ -24,7 +24,7 @@ func TestEventSourcingRepository_it_loads_an_aggregate(t *testing.T) {
 
 	eventStore, _, eventSourcingRepository := setupInMemoryEventSourcingRepository()
 
-	memoCreatedDomainMessage := domain.DomainMessage{
+	memoCreatedDomainMessage := domain.Message{
 		Playhead:    domain.Playhead(1),
 		EventType:   "MemoCreated",
 		Payload:     domain.NewMemoCreated(memoId, body, creationDate),

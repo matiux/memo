@@ -35,7 +35,7 @@ func TestEventStore_Load(t *testing.T) {
 	memoCreatedDomainMessage, memoBodyUpdatedDomainMessage := createEvents()
 
 	eventStore := &domain.InMemoryEventStore{
-		Stream: make(map[string]map[domain.Playhead]domain.DomainMessage),
+		Stream: make(map[string]map[domain.Playhead]domain.Message),
 	}
 
 	eventStore.Append(memoId, domain.EventStream{
@@ -55,7 +55,7 @@ func TestEventStore_DuplicatedPlayhead(t *testing.T) {
 	memoCreatedDomainMessage, memoBodyUpdatedDomainMessage := createEvents()
 
 	eventStore := &domain.InMemoryEventStore{
-		Stream: make(map[string]map[domain.Playhead]domain.DomainMessage),
+		Stream: make(map[string]map[domain.Playhead]domain.Message),
 	}
 
 	eventStore.Append(memoId, domain.EventStream{
