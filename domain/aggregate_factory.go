@@ -1,4 +1,4 @@
-package aggregate
+package domain
 
 type AggregateFactory interface {
 	create(aggregateClass Root, domainEventStream DomainEventStream) (Root, error)

@@ -1,8 +1,8 @@
-package aggregate_test
+package domain_test
 
 import (
 	"fmt"
-	"github.com/matiux/memo/domain/aggregate"
+	"github.com/matiux/memo/domain"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -24,26 +24,26 @@ func TestEventSourcingRepository_it_loads_an_aggregate(t *testing.T) {
 
 	eventStore, _, eventSourcingRepository := setupInMemoryEventSourcingRepository()
 
-	memoCreatedDomainMessage := aggregate.DomainMessage{
-		Playhead:    aggregate.Playhead(1),
+	memoCreatedDomainMessage := domain.DomainMessage{
+		Playhead:    domain.Playhead(1),
 		EventType:   "MemoCreated",
-		Payload:     aggregate.NewMemoCreated(memoId, body, creationDate),
+		Payload:     domain.NewMemoCreated(memoId, body, creationDate),
 		AggregateId: memoId,
 		RecordedOn:  time.Now(),
 	}
 
-	eventStream := aggregate.DomainEventStream{
+	eventStream := domain.DomainEventStream{
 		memoCreatedDomainMessage,
 	}
 
 	eventStore.Append(memoId, eventStream)
 
-	aggregate1, err := eventSourcingRepository.Load(memoId, &aggregate.Memo{})
-	expectedMemo := aggregate.NewMemo(memoId, body, creationDate)
+	aggregate1, err := eventSourcingRepository.Load(memoId, &domain.Memo{})
+	expectedMemo := domain.NewMemo(memoId, body, creationDate)
 
 	assert.Nil(t, err)
 
-	var actualMemo = aggregate1.(*aggregate.Memo)
+	var actualMemo = aggregate1.(*domain.Memo)
 
 	assert.True(t, expectedMemo.Id.Equals(actualMemo.GetAggregateRootId()))
 	assert.Equal(t, expectedMemo.Body, actualMemo.Body)
@@ -54,9 +54,9 @@ func TestEventSourcingRepository_it_return_an_error_if_aggregate_was_not_found(t
 
 	_, _, eventSourcingRepository := setupInMemoryEventSourcingRepository()
 
-	aggregateId := aggregate.NewUUIDv4()
+	aggregateId := domain.NewUUIDv4()
 
-	_, err := eventSourcingRepository.Load(aggregateId, &aggregate.Memo{})
+	_, err := eventSourcingRepository.Load(aggregateId, &domain.Memo{})
 
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), fmt.Sprintf("aggregate with id '%v' not found", aggregateId))

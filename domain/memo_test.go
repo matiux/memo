@@ -1,7 +1,7 @@
-package aggregate_test
+package domain_test
 
 import (
-	"github.com/matiux/memo/domain/aggregate"
+	"github.com/matiux/memo/domain"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -18,11 +18,11 @@ func TestMemo_it_should_be_create_new_memo(t *testing.T) {
 	assert.Len(t, memo.GetUncommittedEvents(), 1)
 
 	domainMessage := memo.GetUncommittedEvents()[0]
-	memoCreated := domainMessage.Payload.(*aggregate.MemoCreated)
+	memoCreated := domainMessage.Payload.(*domain.MemoCreated)
 
-	assert.IsType(t, &aggregate.MemoCreated{}, memoCreated)
-	assert.Equal(t, aggregate.Playhead(1), domainMessage.Playhead)
-	assert.Equal(t, aggregate.Playhead(1), memo.Playhead)
+	assert.IsType(t, &domain.MemoCreated{}, memoCreated)
+	assert.Equal(t, domain.Playhead(1), domainMessage.Playhead)
+	assert.Equal(t, domain.Playhead(1), memo.Playhead)
 
 	assert.Equal(t, creationDate, memoCreated.GetOccurredAt())
 	assert.True(t, memoCreated.Id.Equals(memoId))
@@ -43,13 +43,13 @@ func TestMemo_it_should_be_update_memo(t *testing.T) {
 
 	assert.Len(t, memo.GetUncommittedEvents(), 2)
 
-	memoCreated := (memo.GetUncommittedEvents()[0].Payload).(*aggregate.MemoCreated)
-	memoBodyUpdated := (memo.GetUncommittedEvents()[1].Payload).(*aggregate.MemoBodyUpdated)
+	memoCreated := (memo.GetUncommittedEvents()[0].Payload).(*domain.MemoCreated)
+	memoBodyUpdated := (memo.GetUncommittedEvents()[1].Payload).(*domain.MemoBodyUpdated)
 
-	assert.IsType(t, &aggregate.MemoCreated{}, memoCreated)
-	assert.IsType(t, &aggregate.MemoBodyUpdated{}, memoBodyUpdated)
-	assert.Equal(t, aggregate.Playhead(1), memo.GetUncommittedEvents()[0].Playhead)
-	assert.Equal(t, aggregate.Playhead(2), memo.GetUncommittedEvents()[1].Playhead)
+	assert.IsType(t, &domain.MemoCreated{}, memoCreated)
+	assert.IsType(t, &domain.MemoBodyUpdated{}, memoBodyUpdated)
+	assert.Equal(t, domain.Playhead(1), memo.GetUncommittedEvents()[0].Playhead)
+	assert.Equal(t, domain.Playhead(2), memo.GetUncommittedEvents()[1].Playhead)
 
 	assert.Equal(t, creationDate, memoCreated.GetOccurredAt())
 	assert.Equal(t, updatingDate, memoBodyUpdated.GetOccurredAt())

@@ -1,29 +1,29 @@
-package aggregate_test
+package domain_test
 
 import (
 	"fmt"
-	"github.com/matiux/memo/domain/aggregate"
+	"github.com/matiux/memo/domain"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
 	"time"
 )
 
-var eventBus aggregate.EventBus
+var eventBus domain.EventBus
 
 func setupTestEventBus() {
-	eventBus = aggregate.NewSimpleEventBus()
+	eventBus = domain.NewSimpleEventBus()
 }
 
-func createTestDomainMessage(body string) aggregate.DomainMessage {
+func createTestDomainMessage(body string) domain.DomainMessage {
 
-	event := &eventOccurred{aggregate.NewUUIDv4(), body, aggregate.BasicEvent{}}
+	event := &eventOccurred{domain.NewUUIDv4(), body, domain.BasicEvent{}}
 
-	return aggregate.DomainMessage{
-		Playhead:    aggregate.Playhead(1),
+	return domain.DomainMessage{
+		Playhead:    domain.Playhead(1),
 		EventType:   event.Kind(),
 		Payload:     event,
-		AggregateId: aggregate.NewUUIDv4(),
+		AggregateId: domain.NewUUIDv4(),
 		RecordedOn:  time.Now(),
 	}
 }
@@ -37,7 +37,7 @@ func TestEventBus_it_subscribes_an_event_listener(t *testing.T) {
 	eventListener.On("Handle", domainMessage).Once().Return(nil)
 
 	eventBus.Subscribe(eventListener)
-	err := eventBus.Publish(aggregate.DomainEventStream{domainMessage})
+	err := eventBus.Publish(domain.DomainEventStream{domainMessage})
 
 	assert.Nil(t, err)
 	eventListener.AssertExpectations(t)
@@ -50,7 +50,7 @@ func TestEventBus_it_publishes_events_to_subscribed_event_listeners(t *testing.T
 	domainMessage1 := createTestDomainMessage("The event Body 1")
 	domainMessage2 := createTestDomainMessage("The event Body 2")
 
-	domainEventStream := aggregate.DomainEventStream{domainMessage1, domainMessage2}
+	domainEventStream := domain.DomainEventStream{domainMessage1, domainMessage2}
 
 	eventListener1 := &eventListenerMock{}
 	eventListener1.On("Handle", domainMessage1).Once().Return(nil)
@@ -76,11 +76,11 @@ func TestEventBus_it_does_not_dispatch_new_events_before_all_listeners_have_run(
 	domainMessage1 := createTestDomainMessage("The event Body 1")
 	domainMessage2 := createTestDomainMessage("The event Body 2")
 
-	domainEventStream := aggregate.DomainEventStream{domainMessage1}
+	domainEventStream := domain.DomainEventStream{domainMessage1}
 
 	eventListener1 := simpleEventBusTestListener{
 		eventBus,
-		aggregate.DomainEventStream{domainMessage2},
+		domain.DomainEventStream{domainMessage2},
 		false,
 	}
 
@@ -103,8 +103,8 @@ func TestEventBus_it_should_still_publish_events_after_exception(t *testing.T) {
 	domainMessage1 := createTestDomainMessage("The event Body 1")
 	domainMessage2 := createTestDomainMessage("The event Body 2")
 
-	domainEventStream1 := aggregate.DomainEventStream{domainMessage1}
-	domainEventStream2 := aggregate.DomainEventStream{domainMessage2}
+	domainEventStream1 := domain.DomainEventStream{domainMessage1}
+	domainEventStream2 := domain.DomainEventStream{domainMessage2}
 
 	eventListener := &eventListenerMock{}
 	eventListener.On("Handle", domainMessage1).Once().Return(fmt.Errorf("an error"))
@@ -123,9 +123,9 @@ func TestEventBus_it_should_still_publish_events_after_exception(t *testing.T) {
 }
 
 type eventOccurred struct {
-	id   aggregate.UUIDv4
+	id   domain.UUIDv4
 	body string
-	aggregate.BasicEvent
+	domain.BasicEvent
 }
 
 func (e eventOccurred) Kind() string {
@@ -142,12 +142,12 @@ func (e eventOccurred) UnmarshalJSON(b []byte) error {
 }
 
 type simpleEventBusTestListener struct {
-	aggregate.EventBus
-	publishableStream aggregate.DomainEventStream
+	domain.EventBus
+	publishableStream domain.DomainEventStream
 	handled           bool
 }
 
-func (eb *simpleEventBusTestListener) Handle(message aggregate.DomainMessage) error {
+func (eb *simpleEventBusTestListener) Handle(message domain.DomainMessage) error {
 
 	if !eb.handled {
 		eb.EventBus.Publish(eb.publishableStream)
@@ -161,7 +161,7 @@ type eventListenerMock struct {
 	mock.Mock
 }
 
-func (m *eventListenerMock) Handle(message aggregate.DomainMessage) error {
+func (m *eventListenerMock) Handle(message domain.DomainMessage) error {
 	args := m.Called(message)
 
 	return args.Error(0)

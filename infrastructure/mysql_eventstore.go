@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/matiux/memo/domain/aggregate"
+	"github.com/matiux/memo/domain"
 	"log"
 	"os"
 	"time"
@@ -24,9 +24,9 @@ type MySQLEventStore struct {
 	tableName string
 }
 
-func (e *MySQLEventStore) Append(id aggregate.EntityId, eventStream aggregate.DomainEventStream) error {
+func (e *MySQLEventStore) Append(id domain.EntityId, eventStream domain.DomainEventStream) error {
 
-	_ = id.(aggregate.UUIDv4).Val
+	_ = id.(domain.UUIDv4).Val
 	ctx := context.Background()
 
 	tx, err := e.conn.BeginTx(ctx, nil)
@@ -49,7 +49,7 @@ func (e *MySQLEventStore) Append(id aggregate.EntityId, eventStream aggregate.Do
 
 		if _, err = stmt.ExecContext(
 			ctx,
-			domainMessage.AggregateId.(aggregate.UUIDv4).Val,
+			domainMessage.AggregateId.(domain.UUIDv4).Val,
 			int(domainMessage.Playhead),
 			string(marshaledPayload),
 			"",
@@ -64,9 +64,9 @@ func (e *MySQLEventStore) Append(id aggregate.EntityId, eventStream aggregate.Do
 	return tx.Commit()
 }
 
-func (e *MySQLEventStore) Load(id aggregate.EntityId) (aggregate.DomainEventStream, error) {
+func (e *MySQLEventStore) Load(id domain.EntityId) (domain.DomainEventStream, error) {
 
-	stringId := id.(aggregate.UUIDv4).Val
+	stringId := id.(domain.UUIDv4).Val
 
 	var statement = e.prepareLoadStatement()
 	defer statement.Close()
@@ -76,7 +76,7 @@ func (e *MySQLEventStore) Load(id aggregate.EntityId) (aggregate.DomainEventStre
 	}
 	defer rows.Close()
 
-	eventStream := aggregate.DomainEventStream{}
+	eventStream := domain.DomainEventStream{}
 
 	for rows.Next() {
 
@@ -97,20 +97,20 @@ func (e *MySQLEventStore) Load(id aggregate.EntityId) (aggregate.DomainEventStre
 	return eventStream, nil
 }
 
-func (e *MySQLEventStore) deserializeEvent(row eventRow) aggregate.DomainMessage {
+func (e *MySQLEventStore) deserializeEvent(row eventRow) domain.DomainMessage {
 
-	payload, err := aggregate.EventDeserializerRegistry(row.eventType, row.payload)
+	payload, err := domain.EventDeserializerRegistry(row.eventType, row.payload)
 	if err != nil {
 		panic(err)
 	}
 
-	t, _ := time.Parse(aggregate.EventDateFormat, row.recordedOn)
+	t, _ := time.Parse(domain.EventDateFormat, row.recordedOn)
 
-	domainMessage := aggregate.DomainMessage{
-		Playhead:    aggregate.Playhead(row.playhead),
+	domainMessage := domain.DomainMessage{
+		Playhead:    domain.Playhead(row.playhead),
 		EventType:   row.eventType,
 		Payload:     *payload,
-		AggregateId: aggregate.NewUUIDv4From(row.uuid),
+		AggregateId: domain.NewUUIDv4From(row.uuid),
 		RecordedOn:  t,
 	}
 

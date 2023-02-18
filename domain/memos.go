@@ -1,4 +1,4 @@
-package aggregate
+package domain
 
 type Memos struct {
 	eventSourcingRepository EventSourcingRepository

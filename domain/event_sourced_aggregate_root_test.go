@@ -1,7 +1,7 @@
-package aggregate_test
+package domain_test
 
 import (
-	"github.com/matiux/memo/domain/aggregate"
+	"github.com/matiux/memo/domain"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -17,7 +17,7 @@ func TestEventSourcedAggregateRoot_it_applies_using_an_incrementing_playhead(t *
 	eventStream := memo.GetUncommittedEvents()
 
 	for i := 1; i < len(eventStream); i++ {
-		assert.Equal(t, aggregate.Playhead(i), eventStream[i-1].Playhead)
+		assert.Equal(t, domain.Playhead(i), eventStream[i-1].Playhead)
 	}
 
 	assert.Len(t, eventStream, 2)
@@ -27,9 +27,9 @@ func TestEventSourcedAggregateRoot_it_sets_internal_playhead_when_initializing(t
 
 	memoCreatedDomainMessage, _ := createEvents()
 
-	memo := &aggregate.Memo{}
+	memo := &domain.Memo{}
 	_ = memo.InitializeState(
-		aggregate.DomainEventStream{
+		domain.DomainEventStream{
 			memoCreatedDomainMessage,
 		},
 		memo,
@@ -40,6 +40,6 @@ func TestEventSourcedAggregateRoot_it_sets_internal_playhead_when_initializing(t
 	eventStream := memo.GetUncommittedEvents()
 
 	assert.Len(t, eventStream, 1)
-	assert.Equal(t, aggregate.Playhead(2), eventStream[0].Playhead)
+	assert.Equal(t, domain.Playhead(2), eventStream[0].Playhead)
 
 }
