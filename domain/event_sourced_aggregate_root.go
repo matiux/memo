@@ -9,7 +9,7 @@ type Playhead int
 type DomainEventStream []DomainMessage
 
 type EventSourcedEntity interface {
-	handleRecursively(event DomainEvent)
+	handleRecursively(event Event)
 	registerAggregateRoot(aggregate Root)
 }
 
@@ -17,7 +17,7 @@ type EventSourcedEntity interface {
 type DomainMessage struct {
 	Playhead
 	EventType   string
-	Payload     DomainEvent
+	Payload     Event
 	AggregateId EntityId
 	RecordedOn  time.Time
 }
@@ -25,7 +25,7 @@ type DomainMessage struct {
 // Root represents an AggregateRoot
 type Root interface {
 	GetAggregateRootId() EntityId
-	Apply(event DomainEvent) (err error)
+	Apply(event Event) (err error)
 	GetUncommittedEvents() []DomainMessage
 	InitializeState(stream DomainEventStream, aggregate Root) error
 }
@@ -37,7 +37,7 @@ type EventSourcedAggregateRoot struct {
 	mutex sync.Mutex
 }
 
-func (e *EventSourcedAggregateRoot) Record(event DomainEvent, aggregate Root) error {
+func (e *EventSourcedAggregateRoot) Record(event Event, aggregate Root) error {
 
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
@@ -77,7 +77,7 @@ func (e *EventSourcedAggregateRoot) InitializeState(stream DomainEventStream, ag
 	return nil
 }
 
-func (e *EventSourcedAggregateRoot) handleRecursively(event DomainEvent, aggregate Root) error {
+func (e *EventSourcedAggregateRoot) handleRecursively(event Event, aggregate Root) error {
 
 	if err := e.handle(event, aggregate); err != nil {
 		return err
@@ -91,7 +91,7 @@ func (e *EventSourcedAggregateRoot) handleRecursively(event DomainEvent, aggrega
 	return nil
 }
 
-func (e *EventSourcedAggregateRoot) handle(event DomainEvent, aggregate Root) error {
+func (e *EventSourcedAggregateRoot) handle(event Event, aggregate Root) error {
 	if err := aggregate.Apply(event); err != nil {
 		return err
 	}

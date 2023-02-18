@@ -9,8 +9,8 @@ import (
 var ErrEventNotRegistered = fmt.Errorf("event not registered")
 var EventDateFormat = "2006-01-02\\T15:04:05.000000Z07:00"
 
-// DomainEvent -------------------------------------
-type DomainEvent interface {
+// Event -------------------------------------
+type Event interface {
 	GetOccurredAt() time.Time
 	Kind() string
 	MarshalJSON() ([]byte, error)
@@ -129,17 +129,17 @@ func NewMemoBodyUpdated(id UUIDv4, body string, updatedAd time.Time) *MemoBodyUp
 }
 
 // EventDeserializerRegistry is a registry to deserialize json events
-func EventDeserializerRegistry(eventType, payload string) (*DomainEvent, error) {
+func EventDeserializerRegistry(eventType, payload string) (*Event, error) {
 	switch eventType {
 	case "MemoCreated":
 		var memoCreated MemoCreated
 		_ = json.Unmarshal([]byte(payload), &memoCreated)
-		event := DomainEvent(&memoCreated)
+		event := Event(&memoCreated)
 		return &event, nil
 	case "MemoBodyUpdated":
 		var memoBodyUpdated MemoBodyUpdated
 		_ = json.Unmarshal([]byte(payload), &memoBodyUpdated)
-		event := DomainEvent(&memoBodyUpdated)
+		event := Event(&memoBodyUpdated)
 		return &event, nil
 	}
 

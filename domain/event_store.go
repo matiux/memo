@@ -85,7 +85,7 @@ func (e *TraceableEventStore) Append(id EntityId, eventStream DomainEventStream)
 	return nil
 }
 
-func (e *TraceableEventStore) GetEvents() (events []DomainEvent) {
+func (e *TraceableEventStore) GetEvents() (events []Event) {
 
 	for _, event := range e.recorded {
 		events = append(events, event.Payload)

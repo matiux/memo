@@ -15,7 +15,7 @@ func (m *Memo) GetAggregateRootId() EntityId {
 	return m.Id
 }
 
-func (m *Memo) Apply(event DomainEvent) (err error) {
+func (m *Memo) Apply(event Event) (err error) {
 
 	switch t := event.(type) {
 	case *MemoCreated:

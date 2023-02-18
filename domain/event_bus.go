@@ -102,7 +102,7 @@ func (eb *TraceableEventBus) Publish(domainMessages DomainEventStream) error {
 	return nil
 }
 
-func (eb *TraceableEventBus) GetEvents() (events []DomainEvent) {
+func (eb *TraceableEventBus) GetEvents() (events []Event) {
 
 	for _, event := range eb.recorded {
 		events = append(events, event.Payload)
