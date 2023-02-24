@@ -4,6 +4,7 @@ PROJECT_PREFIX=memo
 # Static ———————————————————————————————————————————————————————————————————————————————————————————————————————————————
 .DEFAULT_GOAL := help
 NODEJS_IMAGE=$(PROJECT_PREFIX)-nodejs
+DB-IMAGE=$(PROJECT_PREFIX)-db
 PROJECT_NAME=$(shell basename $$(pwd) | tr '[:upper:]' '[:lower:]')
 
 # Docker conf ——————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -16,6 +17,7 @@ endif
 
 COMPOSE=docker compose --file ./docker/docker-compose.yml $(COMPOSE_OVERRIDE) -p $(PROJECT_NAME)
 COMPOSE_RUN=$(COMPOSE) run --rm
+COMPOSE_EXEC=$(COMPOSE) exec
 
 # Docker commands ——————————————————————————————————————————————————————————————————————————————————————————————————————
 .PHONY: up
@@ -51,6 +53,11 @@ compose: ## Wrapper a docker compose
 .PHONY: conventional
 conventional: ## chiama conventional commit per validare l'ultimo commit message
 	$(COMPOSE_RUN) -T $(NODEJS_IMAGE) commitlint -e --from=HEAD -V
+
+# Database
+.PHONY: prepare-db
+prepare-db: ## prepara il database
+	$(COMPOSE_EXEC) $(DB-IMAGE) /bin/bash -c "mysql -u root -proot < /docker-entrypoint-initdb.d/sql-schema.sql"
 
 .PHONY: help
 help:	## Show this help
