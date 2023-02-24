@@ -11,8 +11,8 @@ networks:
 
 services:
 
-  memo-nodejs:
-    image: memo-nodejs
+  conventional-commit-nodejs:
+    image: conventional-commit-nodejs
     build: nodejs
     working_dir: /var/www/app
     volumes:
@@ -22,10 +22,11 @@ services:
 
   memo-db:
     image: mariadb:10.6
+    hostname: maria
     volumes:
       - memo-database-volume:/var/lib/mysql
-      - ./mariadb/custom.cnf:/etc/mysql/conf.d/custom.cnf
       - ./data/db:/docker-entrypoint-initdb.d
+#      - ./data/db/sql-schema.sql:/sql-schema.sql
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=memo_db
